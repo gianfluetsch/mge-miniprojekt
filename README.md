@@ -1,10 +1,27 @@
-## mge-miniprojekt
+# MGE Miniprojekt
 
 ## Beschreibung
 
-Ich möchte eine Inventory App erstellen, in welcher Elemente mit bestimmten Informationen (Titel, Beschreibung, Standort, etc.) gespeichert werden können.
+Ich möchte eine Inventory App erstellen, in welcher verschiedene Kategorien erstellt werden können. Innerhalb der Kategorien sollen Elemente mit bestimmten Informationen (Titel, Beschreibung, Standort, Bild) gespeichert werden können. 
+So gehen bestimmte Erlebnisse (Wanderung, Biketour, etc..) bestimmt nicht mehr vergessen :)
+
+## Screens
+
+- Categorie Screen (all created categories)
+- Overview Screen (all collected Items)
+- Add Screen (add new Item)
 
 ## Punktzahl erreichen
 
-Die Punktzahl möchte ich erreichen, indem ich Kotlin verwende (3 Pkt.), verschiedene Screens implementiere (1-5 Pkt.), Jetpack Komponente verwende (1-3 Pkt.), ein Widget 
-erstelle (1-3 Pkt.) sowie ein Sinnvolles Unit-Testing durchführe (1-3 Pkt.).
+Die benötigte Punktzahl möchte ich wie folgt erreichen:
+
+| Task                         | Punkte     |
+| ---------------------------- | ---------- |
+| Kotlin                       | 3          |
+| verschiedene Screens         | 1 - 5      |
+| Persistenz/ Offlinefähigkeit | 1 - 3      |
+| Widget                       | 1 - 3      |
+| Unit-Testing                 | 1 - 3      |
+| **Gesamt**                   | **7 - 17** |
+
+
