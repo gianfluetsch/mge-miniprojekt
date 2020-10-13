@@ -5,7 +5,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="409dp"
@@ -54,7 +53,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="@+id/item_name_text" />
 
-
     <EditText
         android:id="@+id/item_name_edit"
         android:layout_width="0dp"
@@ -94,6 +92,5 @@
         app:layout_constraintEnd_toEndOf="@+id/item_name_edit"
         app:layout_constraintStart_toStartOf="@+id/item_name_edit"
         tools:layout_editor_absoluteX="297dp" />
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -7,6 +7,8 @@
     <string name="add_category_save">Speichern</string>
     <string name="add_item">Add Item</string>
     <string name="new_item_description">Description</string>
+    <string name="no_data_available">No Category available</string>
+    <string name="no_data_available_category">No Item available</string>
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>
     <string name="second_fragment_label">Second Fragment</string>
