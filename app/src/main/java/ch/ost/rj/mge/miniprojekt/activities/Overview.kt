@@ -23,6 +23,9 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
     private var index = 0
 
     private val recyclerAdapter = RecyclerAdapter(list, this)
+    private lateinit var emptyView: TextView
+    private lateinit var emptyImageView: ImageView
+    private lateinit var btnAddCategory: FloatingActionButton
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,11 +33,11 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
         setContentView(R.layout.activity_overview)
         setSupportActionBar(findViewById(R.id.toolbar))
 
-        val emptyView = findViewById<TextView>(R.id.empty_view)
-        val emptyImageView = findViewById<ImageView>(R.id.empty_imageView)
+        emptyView = findViewById<TextView>(R.id.empty_view)
+        emptyImageView = findViewById<ImageView>(R.id.empty_imageView)
         checkIfEmptyRecyclerView(emptyView, emptyImageView)
 
-        val btnAddCategory = findViewById<FloatingActionButton>(R.id.add_category_button)
+        btnAddCategory = findViewById<FloatingActionButton>(R.id.add_category_button)
         btnAddCategory.setOnClickListener {
             val intent = Intent(this, CreateCategory::class.java)
             startActivityForResult(intent, RESPONSE_CATEGORY)
@@ -78,8 +81,7 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
                 createSnackBar(rootLayout, "Category $result added")
             }
         }
-        val emptyView = findViewById<TextView>(R.id.empty_view)
-        val emptyImageView = findViewById<ImageView>(R.id.empty_imageView)
+
         checkIfEmptyRecyclerView(emptyView, emptyImageView)
     }
 
@@ -90,10 +92,6 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
 
 
     override fun onItemClick(position: Int) {
-//        Toast.makeText(this, "Item ${list.get(position).title} clicked", Toast.LENGTH_SHORT).show()
-//        val clickedItem = list[position]
-////        clickedItem.title = "Clicked"
-//        adapter.notifyItemChanged(position)
         val intent = Intent(this, CategoryOverview::class.java)
         val itemCategory = list[position].title
         intent.putExtra(NEW_CATEGORY, itemCategory)

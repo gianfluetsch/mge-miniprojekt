@@ -8,15 +8,20 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import ch.ost.rj.mge.miniprojekt.model.Item
 import ch.ost.rj.mge.miniprojekt.R
+import org.w3c.dom.Text
 
 class CategoryOverview : AppCompatActivity() {
     val CATEGORY = "category"
+
     private var list = ArrayList<Item>()
+    private lateinit var categoryTitle: TextView
+    private lateinit var emptyView: TextView
+    private lateinit var emptyImageView: ImageView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_overview_category)
-        val categoryTitle = findViewById<TextView>(R.id.tv_toolbar_custom)
+        categoryTitle = findViewById<TextView>(R.id.tv_toolbar_custom)
         val intent = intent
         val category = intent.getStringExtra(CATEGORY)
         if (category != null) {
@@ -24,8 +29,8 @@ class CategoryOverview : AppCompatActivity() {
         }
         categoryTitle.text = category
 
-        val emptyView = findViewById<TextView>(R.id.empty_view)
-        val emptyImageView = findViewById<ImageView>(R.id.empty_imageView)
+        emptyView = findViewById<TextView>(R.id.empty_view)
+        emptyImageView = findViewById<ImageView>(R.id.empty_imageView)
         checkIfEmptyRecyclerView(emptyView, emptyImageView)
 
     }

@@ -59,6 +59,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:text="@string/add_category_save"
+        android:enabled="false"
         tools:layout_editor_absoluteX="297dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@+id/category_name_edit"
