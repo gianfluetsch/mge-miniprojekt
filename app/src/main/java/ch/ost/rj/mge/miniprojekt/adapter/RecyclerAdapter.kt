@@ -7,7 +7,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import ch.ost.rj.mge.miniprojekt.R
-import ch.ost.rj.mge.miniprojekt.model.storage.Category
+import ch.ost.rj.mge.miniprojekt.model.Category
 import kotlinx.android.synthetic.main.model_category.view.*
 
 class RecyclerAdapter(private val listener: OnItemClickListener) :

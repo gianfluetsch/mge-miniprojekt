@@ -18,7 +18,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import ch.ost.rj.mge.miniprojekt.R
 import ch.ost.rj.mge.miniprojekt.adapter.RecyclerAdapter
 import ch.ost.rj.mge.miniprojekt.model.InventoryViewModel
-import ch.ost.rj.mge.miniprojekt.model.storage.Category
+import ch.ost.rj.mge.miniprojekt.model.Category
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_add_category.*

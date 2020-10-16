@@ -10,7 +10,6 @@ import androidx.appcompat.app.AppCompatActivity
 import ch.ost.rj.mge.miniprojekt.R
 
 class CategoryOverview : AppCompatActivity() {
-    private val RESPONSE_CATEGORY = 0
     val DESCRIPTION = "description"
     val CATEGORY = "category"
     val PICTURE = "picture"
