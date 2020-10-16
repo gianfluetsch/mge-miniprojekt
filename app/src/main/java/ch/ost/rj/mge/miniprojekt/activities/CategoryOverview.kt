@@ -1,52 +1,52 @@
 package ch.ost.rj.mge.miniprojekt.activities
 
+import android.media.Image
+import android.net.Uri
 import android.os.Bundle
-import android.util.Log
-import android.view.View
+import android.text.InputType
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import ch.ost.rj.mge.miniprojekt.model.Item
 import ch.ost.rj.mge.miniprojekt.R
-import org.w3c.dom.Text
 
 class CategoryOverview : AppCompatActivity() {
+    private val RESPONSE_CATEGORY = 0
+    val DESCRIPTION = "description"
     val CATEGORY = "category"
+    val PICTURE = "picture"
 
-    private var list = ArrayList<Item>()
     private lateinit var categoryTitle: TextView
+    private lateinit var categoryDescription: TextView
+    private lateinit var categoryPicture: ImageView
     private lateinit var emptyView: TextView
     private lateinit var emptyImageView: ImageView
+
+    private lateinit var category: String
+    private lateinit var description: String
+    private lateinit var picture: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_overview_category)
+
         categoryTitle = findViewById<TextView>(R.id.tv_toolbar_custom)
+        categoryDescription = findViewById<TextView>(R.id.item_description_info)
+        categoryDescription.inputType = InputType.TYPE_NULL
+        categoryPicture = findViewById<ImageView>(R.id.imageView)
+
         val intent = intent
-        val category = intent.getStringExtra(CATEGORY)
-        if (category != null) {
-            logStateChange(category)
-        }
+        category = intent.getStringExtra(CATEGORY)!!
+        description = intent.getStringExtra(DESCRIPTION)!!
+        picture = intent.getStringExtra(PICTURE)!!
+
         categoryTitle.text = category
+        categoryDescription.text = description
+        categoryPicture.setImageURI(Uri.parse(picture))
 
         emptyView = findViewById<TextView>(R.id.empty_view)
         emptyImageView = findViewById<ImageView>(R.id.empty_imageView)
-        checkIfEmptyRecyclerView(emptyView, emptyImageView)
-
-    }
-
-    private fun checkIfEmptyRecyclerView(emptyView: View, emptyImageView: ImageView) {
-        if (list.isEmpty()) {
-            emptyView.visibility = View.VISIBLE
-            emptyImageView.visibility = View.VISIBLE
-        } else {
-            emptyView.visibility = View.GONE
-            emptyImageView.visibility = View.GONE
-        }
-    }
 
 
-    private fun logStateChange(callback: String) {
-        Log.d("MGE.MP.DEBUG", "Method: $callback")
+
     }
 }

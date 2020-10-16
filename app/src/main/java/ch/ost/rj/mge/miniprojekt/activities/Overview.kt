@@ -1,31 +1,42 @@
 package ch.ost.rj.mge.miniprojekt.activities
 
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import ch.ost.rj.mge.miniprojekt.model.Item
 import ch.ost.rj.mge.miniprojekt.R
 import ch.ost.rj.mge.miniprojekt.adapter.RecyclerAdapter
+import ch.ost.rj.mge.miniprojekt.model.InventoryViewModel
+import ch.ost.rj.mge.miniprojekt.model.storage.Category
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.android.synthetic.main.activity_add_category.*
 import kotlinx.android.synthetic.main.activity_overview.*
 
 class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
     private val RESPONSE_CATEGORY = 0
+    val CALLBACK_CODE = 1
+    val permission = android.Manifest.permission.READ_EXTERNAL_STORAGE
     private val NEW_CATEGORY = "category"
-    private var list = ArrayList<Item>()
-    private var index = 0
+    val DESCRIPTION = "description"
+    val PICTURE = "picture"
 
-    private val recyclerAdapter = RecyclerAdapter(list, this)
+    private val recyclerAdapter = RecyclerAdapter(this)
     private lateinit var emptyView: TextView
     private lateinit var emptyImageView: ImageView
     private lateinit var btnAddCategory: FloatingActionButton
+    private lateinit var catviewModel: InventoryViewModel
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,7 +46,13 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
 
         emptyView = findViewById<TextView>(R.id.empty_view)
         emptyImageView = findViewById<ImageView>(R.id.empty_imageView)
-        checkIfEmptyRecyclerView(emptyView, emptyImageView)
+//        checkIfEmptyRecyclerView()
+
+        catviewModel = ViewModelProvider(this).get(InventoryViewModel::class.java)
+
+        catviewModel.allCategorys.observe(this, Observer { categorys ->
+            categorys?.let { recyclerAdapter.setCategorys(it) }
+        })
 
         btnAddCategory = findViewById<FloatingActionButton>(R.id.add_category_button)
         btnAddCategory.setOnClickListener {
@@ -44,8 +61,8 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
         }
 
         updateRecyclerView()
-        logStateChange("onCreate")
     }
+
 
     private fun updateRecyclerView() {
         recylerView.adapter = recyclerAdapter
@@ -54,8 +71,9 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
         recylerView.setHasFixedSize(true)
     }
 
-    private fun checkIfEmptyRecyclerView(emptyView: View, emptyImageView: ImageView) {
-        if (list.isEmpty()) {
+    private fun checkIfEmptyRecyclerView() {
+        logStateChange("${recyclerAdapter.itemCount}")
+        if (recyclerAdapter.itemCount == 0) {
             recylerView.visibility = View.GONE
             emptyView.visibility = View.VISIBLE
             emptyImageView.visibility = View.VISIBLE
@@ -70,20 +88,25 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == RESPONSE_CATEGORY && resultCode == RESULT_OK) {
             val result = data?.getStringExtra(NEW_CATEGORY)
-            val newItem = Item(R.drawable.ic_baseline_category_24, "$result")
+            val description = data?.getStringExtra(DESCRIPTION)
+            val uri = data?.getStringExtra(PICTURE)
 
-            if (newItem in list) {
-                createSnackBar(rootLayout, "Category $result already exists")
-            } else {
-                list.add(newItem)
-                recyclerAdapter.notifyItemInserted(index)
-                index++
+            data?.getStringExtra(NEW_CATEGORY)?.let {
+                val category = Category(it, description, uri)
+                catviewModel.insert(category)
                 createSnackBar(rootLayout, "Category $result added")
+                Unit
             }
+        } else {
+            Toast.makeText(
+                applicationContext,
+                "not safed",
+                Toast.LENGTH_LONG
+            ).show()
         }
-
-        checkIfEmptyRecyclerView(emptyView, emptyImageView)
+//                checkIfEmptyRecyclerView()
     }
+
 
     private fun createSnackBar(view: View, message: String) {
         val snackBar = Snackbar.make(view, message, Snackbar.LENGTH_LONG)
@@ -91,12 +114,47 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
     }
 
 
-    override fun onItemClick(position: Int) {
+    override fun onItemClick(category: Category, position: Int) {
+        setupPermissions()
         val intent = Intent(this, CategoryOverview::class.java)
-        val itemCategory = list[position].title
+        val itemCategory = category.name
+        val itemDescription = category.description
+        val picture = category.picture
         intent.putExtra(NEW_CATEGORY, itemCategory)
+        intent.putExtra(DESCRIPTION, itemDescription)
+        intent.putExtra(PICTURE, picture)
         startActivityForResult(intent, RESPONSE_CATEGORY)
     }
+
+    private fun setupPermissions() {
+        val status = ContextCompat.checkSelfPermission(this, permission)
+
+        if (status != PackageManager.PERMISSION_GRANTED) {
+            createSnackBar(add_category_layout, "Permission for Gallery required")
+            makeRequest()
+        }
+    }
+
+    private fun makeRequest() {
+        ActivityCompat.requestPermissions(this, arrayOf(permission), CALLBACK_CODE)
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        if (requestCode != CALLBACK_CODE)
+            return;
+        if (grantResults.isEmpty())
+            return;
+        if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            createSnackBar(add_category_layout, "Permission granted")
+        } else {
+            createSnackBar(add_category_layout, "Permission denied")
+        }
+    }
+
 
     // Allenfalls für Darkmode etc. nötig !!!
 //    override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -106,9 +164,6 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
 //    }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
             R.id.action_settings -> true
             else -> super.onOptionsItemSelected(item)
