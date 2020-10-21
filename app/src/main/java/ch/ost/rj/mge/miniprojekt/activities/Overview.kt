@@ -9,13 +9,11 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.view.size
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -25,17 +23,24 @@ import ch.ost.rj.mge.miniprojekt.model.InventoryViewModel
 import ch.ost.rj.mge.miniprojekt.model.Category
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.activity_add_category.*
 import kotlinx.android.synthetic.main.activity_overview.*
-import kotlinx.android.synthetic.main.model_category.view.*
 
 class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
-    private val RESPONSE_CATEGORY = 0
-    val CALLBACK_CODE = 1
+
+    companion object {
+    const val DESCRIPTION = "description"
+    const val PICTURE = "picture"
+    const val RESPONSE_CATEGORY = 0
+    const val CALLBACK_CODE = 1
+    const val CATEGORY = "category"
+    const val MESSAGE = "message"
+    const val GALLERY_REQUEST = 7
+    const val CAMERA_REQUEST = 8
+    var darkMode = false
+    var size = 0
+    }
+
     val permission = android.Manifest.permission.READ_EXTERNAL_STORAGE
-    private val NEW_CATEGORY = "category"
-    val DESCRIPTION = "description"
-    val PICTURE = "picture"
 
     private val recyclerAdapter = RecyclerAdapter(this)
     private lateinit var emptyView: TextView
@@ -44,11 +49,6 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
     private lateinit var catviewModel: InventoryViewModel
     private lateinit var category: Category
 
-    companion object {
-        var darkMode = false
-        var size = 0
-    }
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,7 +56,6 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
         setSupportActionBar(findViewById(R.id.toolbar))
         emptyView = findViewById<TextView>(R.id.empty_view)
         emptyImageView = findViewById<ImageView>(R.id.empty_imageView)
-        checkIfEmptyRecyclerView()
 
         catviewModel = ViewModelProvider(this).get(InventoryViewModel::class.java)
 
@@ -71,6 +70,7 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
         }
 
         updateRecyclerView()
+        getDBSize()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -85,51 +85,47 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
         recylerView.layoutManager = LinearLayoutManager(this)
         recylerView.setHasFixedSize(true)
 
+//        getDBSize()
+    }
+
+    private fun getDBSize() {
         // warten bis observer ausgeführt -> erst dann size benutzen
         catviewModel.checkDB.observe(this, Observer { categorys ->
-            categorys?.let { logStateChange("${it[0]}")
-            size = it[0].toInt()}
+            categorys?.let { waitForObserver(it) }
         })
+    }
+
+    private fun waitForObserver(dbSize: Integer) {
+        size = dbSize.toInt()
         checkIfEmptyRecyclerView()
     }
 
     private fun checkIfEmptyRecyclerView() {
-        logStateChange("$size")
-//
-//        if (recyclerAdapter.itemCount == 0) {
-//            recylerView.visibility = View.GONE
-//            emptyView.visibility = View.VISIBLE
-//            emptyImageView.visibility = View.VISIBLE
-//        } else {
-//            recylerView.visibility = View.VISIBLE
-//            emptyView.visibility = View.GONE
-//            emptyImageView.visibility = View.GONE
-//        }
+        if (size == 0) {
+            recylerView.visibility = View.GONE
+            emptyView.visibility = View.VISIBLE
+            emptyImageView.visibility = View.VISIBLE
+        } else {
+            recylerView.visibility = View.VISIBLE
+            emptyView.visibility = View.GONE
+            emptyImageView.visibility = View.GONE
+        }
 
-//        logStateChange("${catviewModel.getCheckDB()}")
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == RESPONSE_CATEGORY && resultCode == RESULT_OK) {
-            val result = data?.getStringExtra(NEW_CATEGORY)
-            val description = data?.getStringExtra(DESCRIPTION)
-            val uri = data?.getStringExtra(PICTURE)
+            val message = data?.getStringExtra(MESSAGE)
 
-            data?.getStringExtra(NEW_CATEGORY)?.let {
-                val category = Category(it, description, uri)
-                catviewModel.insert(category)
-                createSnackBar(rootLayout, "Category $result added")
+            data?.getStringExtra(CATEGORY)?.let {
+                if (message != null) {
+                    createSnackBar(rootLayout, message)
+                }
                 Unit
             }
-        } else {
-            Toast.makeText(
-                applicationContext,
-                "not safed",
-                Toast.LENGTH_LONG
-            ).show()
         }
-                checkIfEmptyRecyclerView()
+                getDBSize()
     }
 
     private fun createSnackBar(view: View, message: String) {
@@ -139,8 +135,9 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
 
     override fun onItemClick(category: Category, position: Int) {
         this.category = category
-        setupPermissions()
-        makeRequest()
+//        setupPermissions()
+//        makeRequest()
+        loadContentFromRoom()
     }
 
     private fun loadContentFromRoom() {
@@ -148,7 +145,7 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
         val itemCategory = category.name
         val itemDescription = category.description
         val picture = category.picture
-        intent.putExtra(NEW_CATEGORY, itemCategory)
+        intent.putExtra(CATEGORY, itemCategory)
         intent.putExtra(DESCRIPTION, itemDescription)
         intent.putExtra(PICTURE, picture)
         startActivityForResult(intent, RESPONSE_CATEGORY)
@@ -170,9 +167,10 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
                 val dialog = builder.create()
                 dialog.show()
             } else {
-                makeRequest()
+//                makeRequest()
             }
         }
+        makeRequest()
     }
 
     private fun makeRequest() {
@@ -184,15 +182,6 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
         permissions: Array<String>,
         grantResults: IntArray
     ) {
-//        if (requestCode != CALLBACK_CODE)
-//            return;
-//        if (grantResults.isEmpty())
-//            return;
-//        if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-//            createSnackBar(add_category_layout, "Permission granted")
-//        } else {
-//            createSnackBar(add_category_layout, "Permission denied")
-//        }
         when (requestCode) {
             CALLBACK_CODE -> {
                 if (grantResults.isEmpty() || grantResults[0] != PackageManager.PERMISSION_GRANTED) {

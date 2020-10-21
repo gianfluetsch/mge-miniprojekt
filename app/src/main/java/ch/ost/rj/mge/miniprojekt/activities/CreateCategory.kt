@@ -1,12 +1,8 @@
 package ch.ost.rj.mge.miniprojekt.activities
 
-import android.app.Activity
 import android.app.AlertDialog
-import android.content.DialogInterface
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -18,20 +14,16 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import ch.ost.rj.mge.miniprojekt.R
+import ch.ost.rj.mge.miniprojekt.model.Category
+import ch.ost.rj.mge.miniprojekt.model.InventoryViewModel
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.activity_add_category.*
-import kotlinx.android.synthetic.main.activity_add_category.view.*
-import java.util.jar.Manifest
 
 class CreateCategory : AppCompatActivity() {
-    val NEW_CATEGORY = "category"
-    val DESCRIPTION = "description"
-    val PICTURE = "picture"
-    val GALLERY_REQUEST = 7
-    val CAMERA_REQUEST = 8
 
     private lateinit var btnSaveCategory: Button
     private lateinit var categoryNameInput: String
@@ -41,6 +33,7 @@ class CreateCategory : AppCompatActivity() {
     private lateinit var imageView: ImageView
     private lateinit var btnImage: Button
     private lateinit var imageUri: String
+    private lateinit var catviewModel: InventoryViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,14 +41,42 @@ class CreateCategory : AppCompatActivity() {
 
         validateInput()
 
+        catviewModel = ViewModelProvider(this).get(InventoryViewModel::class.java)
+
         btnSaveCategory.setOnClickListener {
-            val resultIntent = Intent(this, Overview::class.java)
-            resultIntent.putExtra(NEW_CATEGORY, categoryNameInput)
-            resultIntent.putExtra(DESCRIPTION, descriptionInput)
-            resultIntent.putExtra(PICTURE, imageUri)
-            setResult(RESULT_OK, resultIntent)
-            finish()
+            var message : String = ""
+            catviewModel.checkItemExist(categoryNameInput).observeOnce(this, Observer { categorys ->
+                categorys?.let {
+                    if (it.toInt() == 0) {
+                        message = "Item $categoryNameInput added"
+                        val category = Category(categoryNameInput, descriptionInput, imageUri)
+                        catviewModel.insert(category)
+                        waitForObserver(message)
+                    } else {
+                        message = "Item $categoryNameInput exists already"
+                        waitForObserver(message)
+                    }
+                }
+            })
         }
+    }
+
+    fun waitForObserver(message: String) {
+        val resultIntent = Intent(this, Overview::class.java)
+        resultIntent.putExtra(Overview.CATEGORY, categoryNameInput)
+        resultIntent.putExtra(Overview.MESSAGE, message)
+        setResult(RESULT_OK, resultIntent)
+
+        finish()
+    }
+
+    fun <T> LiveData<T>.observeOnce(lifecycleOwner: LifecycleOwner, observer: Observer<T>) {
+        observe(lifecycleOwner, object : Observer<T> {
+            override fun onChanged(t: T?) {
+                observer.onChanged(t)
+                removeObserver(this)
+            }
+        })
     }
 
     private fun validateInput() {
@@ -82,6 +103,7 @@ class CreateCategory : AppCompatActivity() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 descriptionInput = editDescription.text.toString()
             }
+
             override fun afterTextChanged(s: Editable?) {}
         })
 
@@ -91,14 +113,14 @@ class CreateCategory : AppCompatActivity() {
     }
 
     private fun getImageFromGallery() {
-        val intent = Intent(Intent.ACTION_GET_CONTENT)
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
         intent.type = "image/*"
-        startActivityForResult(intent, GALLERY_REQUEST)
+        startActivityForResult(intent, Overview.GALLERY_REQUEST)
     }
 
     private fun capturePictureFromCamera() {
         val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-        startActivityForResult(intent, CAMERA_REQUEST)
+        startActivityForResult(intent, Overview.CAMERA_REQUEST)
     }
 
     private fun showImageOptionDialog() {
@@ -106,7 +128,7 @@ class CreateCategory : AppCompatActivity() {
         val builder = AlertDialog.Builder(this)
         builder.setTitle(R.string.select_image_dialog)
             .setItems(options) { _, which ->
-                when(which) {
+                when (which) {
                     0 -> getImageFromGallery()
                     1 -> capturePictureFromCamera()
                 }
@@ -118,13 +140,14 @@ class CreateCategory : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        if (resultCode == RESULT_OK && requestCode == GALLERY_REQUEST) {
+        if (resultCode == RESULT_OK && requestCode == Overview.GALLERY_REQUEST) {
             imageView.setImageURI(data?.data)
             val uri: Uri? = data?.data
+            contentResolver.takePersistableUriPermission(uri!!, Intent.FLAG_GRANT_READ_URI_PERMISSION)
             imageUri = uri.toString()
-            logStateChange("$uri")
-        } else if (resultCode == RESULT_OK && requestCode == CAMERA_REQUEST) {
-            val bitmap : Bitmap = data?.extras?.get("data") as Bitmap
+
+        } else if (resultCode == RESULT_OK && requestCode == Overview.CAMERA_REQUEST) {
+            val bitmap: Bitmap = data?.extras?.get("data") as Bitmap
             imageView.setImageBitmap(bitmap)
         }
 

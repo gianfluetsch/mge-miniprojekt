@@ -13,8 +13,6 @@ abstract class InventoryDatabase : RoomDatabase() {
 
     abstract fun categoryDao(): Dao
 
-//    abstract fun itemDao(): Dao
-
     companion object {
         // Singleton prevents multiple instances of database opening at the
         // same time.
@@ -47,12 +45,6 @@ abstract class InventoryDatabase : RoomDatabase() {
         suspend fun populateDatabase(categoryDao: Dao) {
             // Delete all content here.
             categoryDao.deleteAll()
-
-            // Add sample words.
-//            var category = Category("Hello")
-//            categoryDao.insert(category)
-//            category = Category("World!")
-//            categoryDao.insert(category)
 
         }
     }
