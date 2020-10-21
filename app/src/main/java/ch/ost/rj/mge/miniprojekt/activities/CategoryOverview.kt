@@ -45,7 +45,5 @@ class CategoryOverview : AppCompatActivity() {
         emptyView = findViewById<TextView>(R.id.empty_view)
         emptyImageView = findViewById<ImageView>(R.id.empty_imageView)
 
-
-
     }
 }

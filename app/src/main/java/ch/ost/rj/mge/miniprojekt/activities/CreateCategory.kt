@@ -1,10 +1,15 @@
 package ch.ost.rj.mge.miniprojekt.activities
 
 import android.app.Activity
+import android.app.AlertDialog
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -25,6 +30,8 @@ class CreateCategory : AppCompatActivity() {
     val NEW_CATEGORY = "category"
     val DESCRIPTION = "description"
     val PICTURE = "picture"
+    val GALLERY_REQUEST = 7
+    val CAMERA_REQUEST = 8
 
     private lateinit var btnSaveCategory: Button
     private lateinit var categoryNameInput: String
@@ -75,29 +82,54 @@ class CreateCategory : AppCompatActivity() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 descriptionInput = editDescription.text.toString()
             }
-
             override fun afterTextChanged(s: Editable?) {}
         })
 
         btnImage.setOnClickListener {
-            val intent = Intent(Intent.ACTION_PICK)
-            intent.type = "image/*"
-            startActivityForResult(intent, 1)
+            showImageOptionDialog()
         }
+    }
 
+    private fun getImageFromGallery() {
+        val intent = Intent(Intent.ACTION_GET_CONTENT)
+        intent.type = "image/*"
+        startActivityForResult(intent, GALLERY_REQUEST)
+    }
+
+    private fun capturePictureFromCamera() {
+        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        startActivityForResult(intent, CAMERA_REQUEST)
+    }
+
+    private fun showImageOptionDialog() {
+        val options = resources.getStringArray(R.array.image_options)
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle(R.string.select_image_dialog)
+            .setItems(options) { _, which ->
+                when(which) {
+                    0 -> getImageFromGallery()
+                    1 -> capturePictureFromCamera()
+                }
+            }
+        val dialog = builder.create()
+        dialog.show()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        if (resultCode == Activity.RESULT_OK && requestCode == 1) {
+        if (resultCode == RESULT_OK && requestCode == GALLERY_REQUEST) {
             imageView.setImageURI(data?.data)
             val uri: Uri? = data?.data
             imageUri = uri.toString()
             logStateChange("$uri")
+        } else if (resultCode == RESULT_OK && requestCode == CAMERA_REQUEST) {
+            val bitmap : Bitmap = data?.extras?.get("data") as Bitmap
+            imageView.setImageBitmap(bitmap)
         }
 
     }
+
 
     private fun createSnackBar(view: View, message: String) {
         val snackBar = Snackbar.make(view, message, Snackbar.LENGTH_LONG)

@@ -1,7 +1,0 @@
-<resources>
-
-    <style name="ThemeOverlay.Miniprojekt.AppWidgetContainer" parent="">
-        <item name="appWidgetBackgroundColor">@color/transparent</item>
-        <item name="appWidgetTextColor">@color/black</item>
-    </style>
-</resources>

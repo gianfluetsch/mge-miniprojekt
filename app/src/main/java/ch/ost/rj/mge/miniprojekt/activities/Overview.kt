@@ -4,14 +4,18 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
+import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.size
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -23,6 +27,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_add_category.*
 import kotlinx.android.synthetic.main.activity_overview.*
+import kotlinx.android.synthetic.main.model_category.view.*
 
 class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
     private val RESPONSE_CATEGORY = 0
@@ -37,16 +42,21 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
     private lateinit var emptyImageView: ImageView
     private lateinit var btnAddCategory: FloatingActionButton
     private lateinit var catviewModel: InventoryViewModel
+    private lateinit var category: Category
+
+    companion object {
+        var darkMode = false
+        var size = 0
+    }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_overview)
         setSupportActionBar(findViewById(R.id.toolbar))
-
         emptyView = findViewById<TextView>(R.id.empty_view)
         emptyImageView = findViewById<ImageView>(R.id.empty_imageView)
-//        checkIfEmptyRecyclerView()
+        checkIfEmptyRecyclerView()
 
         catviewModel = ViewModelProvider(this).get(InventoryViewModel::class.java)
 
@@ -63,25 +73,40 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
         updateRecyclerView()
     }
 
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        super.onCreateOptionsMenu(menu)
+        menuInflater.inflate(R.menu.menu_main, menu)
+        return true
+    }
 
     private fun updateRecyclerView() {
         recylerView.adapter = recyclerAdapter
         // Zuständig für Positionierung innerhalb RecyclerView
         recylerView.layoutManager = LinearLayoutManager(this)
         recylerView.setHasFixedSize(true)
+
+        // warten bis observer ausgeführt -> erst dann size benutzen
+        catviewModel.checkDB.observe(this, Observer { categorys ->
+            categorys?.let { logStateChange("${it[0]}")
+            size = it[0].toInt()}
+        })
+        checkIfEmptyRecyclerView()
     }
 
     private fun checkIfEmptyRecyclerView() {
-        logStateChange("${recyclerAdapter.itemCount}")
-        if (recyclerAdapter.itemCount == 0) {
-            recylerView.visibility = View.GONE
-            emptyView.visibility = View.VISIBLE
-            emptyImageView.visibility = View.VISIBLE
-        } else {
-            recylerView.visibility = View.VISIBLE
-            emptyView.visibility = View.GONE
-            emptyImageView.visibility = View.GONE
-        }
+        logStateChange("$size")
+//
+//        if (recyclerAdapter.itemCount == 0) {
+//            recylerView.visibility = View.GONE
+//            emptyView.visibility = View.VISIBLE
+//            emptyImageView.visibility = View.VISIBLE
+//        } else {
+//            recylerView.visibility = View.VISIBLE
+//            emptyView.visibility = View.GONE
+//            emptyImageView.visibility = View.GONE
+//        }
+
+//        logStateChange("${catviewModel.getCheckDB()}")
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -104,18 +129,21 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
                 Toast.LENGTH_LONG
             ).show()
         }
-//                checkIfEmptyRecyclerView()
+                checkIfEmptyRecyclerView()
     }
-
 
     private fun createSnackBar(view: View, message: String) {
         val snackBar = Snackbar.make(view, message, Snackbar.LENGTH_LONG)
         snackBar.setAction("Hide") { snackBar.dismiss() }.show()
     }
 
-
     override fun onItemClick(category: Category, position: Int) {
+        this.category = category
         setupPermissions()
+        makeRequest()
+    }
+
+    private fun loadContentFromRoom() {
         val intent = Intent(this, CategoryOverview::class.java)
         val itemCategory = category.name
         val itemDescription = category.description
@@ -130,8 +158,20 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
         val status = ContextCompat.checkSelfPermission(this, permission)
 
         if (status != PackageManager.PERMISSION_GRANTED) {
-            createSnackBar(add_category_layout, "Permission for Gallery required")
-            makeRequest()
+            logStateChange("Permission for Gallery required")
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, permission)) {
+                val builder = AlertDialog.Builder(this)
+                builder.setMessage("Permission to access external Storage is required")
+                    .setTitle("Permission required")
+                builder.setPositiveButton("OK") { dialog, id ->
+                    logStateChange("ok clicked")
+                    makeRequest()
+                }
+                val dialog = builder.create()
+                dialog.show()
+            } else {
+                makeRequest()
+            }
         }
     }
 
@@ -144,30 +184,54 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
         permissions: Array<String>,
         grantResults: IntArray
     ) {
-        if (requestCode != CALLBACK_CODE)
-            return;
-        if (grantResults.isEmpty())
-            return;
-        if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            createSnackBar(add_category_layout, "Permission granted")
-        } else {
-            createSnackBar(add_category_layout, "Permission denied")
+//        if (requestCode != CALLBACK_CODE)
+//            return;
+//        if (grantResults.isEmpty())
+//            return;
+//        if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+//            createSnackBar(add_category_layout, "Permission granted")
+//        } else {
+//            createSnackBar(add_category_layout, "Permission denied")
+//        }
+        when (requestCode) {
+            CALLBACK_CODE -> {
+                if (grantResults.isEmpty() || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                    logStateChange("Permission denied")
+                } else {
+                    logStateChange("Permission granted")
+                    loadContentFromRoom()
+                }
+            }
         }
     }
 
-
-    // Allenfalls für Darkmode etc. nötig !!!
-//    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-//        // Inflate the menu; this adds items to the action bar if it is present.
-//        menuInflater.inflate(R.menu.menu_main, menu)
-//        return true
-//    }
-
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.action_settings -> true
+            R.id.action_settings -> {
+                if (darkMode) {
+                    darkMode = false
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                    delegate.applyDayNight()
+                } else {
+                    darkMode = true
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                    delegate.applyDayNight()
+                }
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        val item = menu!!.findItem(R.id.action_settings)
+        if (darkMode) {
+            item.title = "Light Mode"
+        } else {
+            item.title = "Dark Mode"
+        }
+
+        return super.onPrepareOptionsMenu(menu)
     }
 
     private fun logStateChange(callback: String) {

@@ -12,6 +12,9 @@ public interface Dao {
     @Query("SELECT * from category_table ORDER BY name ASC")
     fun getAlphabetizedWords(): LiveData<List<Category>>
 
+    @Query("SELECT COUNT(name) from category_table")
+    fun isDBEmpty(): LiveData<List<Integer>>
+
     // ignores a new word if it's exactly the same as one already in the list
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(category: Category)

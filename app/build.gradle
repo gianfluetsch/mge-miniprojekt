@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId "ch.ost.rj.mge.miniprojekt"
-        minSdkVersion 27
+        minSdkVersion 30
         targetSdkVersion 30
         versionCode 1
         versionName "1.0"

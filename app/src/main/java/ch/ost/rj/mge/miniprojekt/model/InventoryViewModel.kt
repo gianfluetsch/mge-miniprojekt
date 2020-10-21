@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 class InventoryViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: Repository
+    val checkDB: LiveData<List<Integer>>
 
     val allCategorys: LiveData<List<Category>>
 
@@ -18,9 +19,14 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
         val categorysDao = InventoryDatabase.getDatabase(application, viewModelScope).categoryDao()
         repository = Repository(categorysDao)
         allCategorys = repository.allCategorys
+        checkDB = repository.sumItems
     }
 
     fun insert(category: Category) = viewModelScope.launch(Dispatchers.IO) {
         repository.insert(category)
+    }
+
+    fun DBCount() : LiveData<List<Integer>> {
+        return checkDB
     }
 }

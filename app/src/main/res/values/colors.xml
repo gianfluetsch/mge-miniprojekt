@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#6200EE</color>
-    <color name="colorPrimaryDark">#3700B3</color>
-    <color name="colorAccent">#03DAC5</color>
+    <color name="colorPrimary">#4CAF50</color>
+    <color name="colorPrimaryDark">#4F009688</color>
+    <color name="colorAccent">#4CAF50</color>
+    <color name="light_blue_50">#FFE1F5FE</color>
+    <color name="light_blue_200">#FF81D4FA</color>
+    <color name="light_blue_600">#FF039BE5</color>
+    <color name="light_blue_900">#FF01579B</color>
+    <color name="transparent">#00FF0000</color>
+    <color name="black">#000000</color>
+
+    <color name="ic_settings_color">#FFFFFFFF</color>
+    <color name="ic_attachment_color">#FFFFFFFF</color>
+    <color name="background_color">#FF808080</color>
+    <color name="ic_color_lens_color">#FFFFFFFF</color>
 </resources>
