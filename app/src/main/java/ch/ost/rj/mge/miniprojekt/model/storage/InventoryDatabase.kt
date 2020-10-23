@@ -5,10 +5,10 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
-import ch.ost.rj.mge.miniprojekt.model.Category
+import ch.ost.rj.mge.miniprojekt.model.Item
 import kotlinx.coroutines.CoroutineScope
 
-@Database(entities = [Category::class], version = 1, exportSchema = false)
+@Database(entities = [Item::class], version = 1, exportSchema = false)
 abstract class InventoryDatabase : RoomDatabase() {
 
     abstract fun categoryDao(): Dao
@@ -35,15 +35,9 @@ abstract class InventoryDatabase : RoomDatabase() {
 
         override fun onOpen(db: SupportSQLiteDatabase) {
             super.onOpen(db)
-//            INSTANCE?.let { database ->
-//                scope.launch {
-//                    populateDatabase(database.categoryDao())
-//                }
-//            }
         }
 
         suspend fun populateDatabase(categoryDao: Dao) {
-            // Delete all content here.
             categoryDao.deleteAll()
 
         }

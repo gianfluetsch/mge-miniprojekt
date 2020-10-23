@@ -1,26 +1,24 @@
 package ch.ost.rj.mge.miniprojekt.activities
 
 import android.content.Intent
-import android.content.pm.PackageManager
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import ch.ost.rj.mge.miniprojekt.R
 import ch.ost.rj.mge.miniprojekt.adapter.RecyclerAdapter
 import ch.ost.rj.mge.miniprojekt.model.InventoryViewModel
-import ch.ost.rj.mge.miniprojekt.model.Category
+import ch.ost.rj.mge.miniprojekt.model.Item
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_overview.*
@@ -28,26 +26,33 @@ import kotlinx.android.synthetic.main.activity_overview.*
 class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
 
     companion object {
-    const val DESCRIPTION = "description"
-    const val PICTURE = "picture"
-    const val RESPONSE_CATEGORY = 0
-    const val CALLBACK_CODE = 1
-    const val CATEGORY = "category"
-    const val MESSAGE = "message"
-    const val GALLERY_REQUEST = 7
-    const val CAMERA_REQUEST = 8
-    var darkMode = false
-    var size = 0
+        const val DESCRIPTION = "description"
+        const val PICTURE = "picture"
+        const val DATE = "date"
+        const val RESPONSE_ITEM = 0
+        const val ITEM = "item"
+        const val MESSAGE = "message"
+        const val GALLERY_REQUEST = 7
+        const val CAMERA_REQUEST = 8
+        const val MODIFY = "modify"
+        var darkModeCurrent = false
+        var filterMode = 0
+        var themeModePref = false
+        var filterModePref = 0
+        var size = 0
+        val filePath = "ch.ost.rj.mge.miniprojekt.preferences"
+        const val DARK_MODE = "darkmode";
+        const val FILTER = "filter"
+        private var PRIVATE_MODE = 0
     }
-
-    val permission = android.Manifest.permission.READ_EXTERNAL_STORAGE
 
     private val recyclerAdapter = RecyclerAdapter(this)
     private lateinit var emptyView: TextView
     private lateinit var emptyImageView: ImageView
-    private lateinit var btnAddCategory: FloatingActionButton
-    private lateinit var catviewModel: InventoryViewModel
-    private lateinit var category: Category
+    private lateinit var btnAddItem: FloatingActionButton
+    private lateinit var itemViewModel: InventoryViewModel
+    private lateinit var item: Item
+    private lateinit var btnFilterItems: Button
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,21 +61,103 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
         setSupportActionBar(findViewById(R.id.toolbar))
         emptyView = findViewById<TextView>(R.id.empty_view)
         emptyImageView = findViewById<ImageView>(R.id.empty_imageView)
+        btnFilterItems = findViewById<Button>(R.id.button_filter)
+        btnAddItem = findViewById<FloatingActionButton>(R.id.add_item_button)
 
-        catviewModel = ViewModelProvider(this).get(InventoryViewModel::class.java)
-
-        catviewModel.allCategorys.observe(this, Observer { categorys ->
-            categorys?.let { recyclerAdapter.setCategorys(it) }
-        })
-
-        btnAddCategory = findViewById<FloatingActionButton>(R.id.add_category_button)
-        btnAddCategory.setOnClickListener {
-            val intent = Intent(this, CreateCategory::class.java)
-            startActivityForResult(intent, RESPONSE_CATEGORY)
+        itemViewModel = ViewModelProvider(this).get(InventoryViewModel::class.java)
+        btnAddItem.setOnClickListener {
+            val intent = Intent(this, CreateItem::class.java)
+            startActivityForResult(intent, RESPONSE_ITEM)
+        }
+        btnFilterItems.setOnClickListener {
+            filterItems()
         }
 
         updateRecyclerView()
         getDBSize()
+        getThemeMode()
+        getFilterMode()
+    }
+
+    private fun filterItems() {
+        val options = resources.getStringArray(R.array.filter_options)
+        val builder = android.app.AlertDialog.Builder(this)
+        builder.setTitle(R.string.select_filter_dialog)
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> changeFilter(0)
+                    1 -> changeFilter(1)
+                    2 -> changeFilter(2)
+                    3 -> changeFilter(3)
+                }
+            }
+        val dialog = builder.create()
+        dialog.show()
+    }
+
+
+    private fun getThemeMode() {
+        val preference: SharedPreferences = getSharedPreferences(filePath, PRIVATE_MODE)
+        themeModePref = preference.getBoolean(DARK_MODE, false)
+
+        if (themeModePref != darkModeCurrent) {
+            changeTheme()
+        }
+    }
+
+    private fun getFilterMode() {
+        val preference: SharedPreferences = getSharedPreferences(filePath, PRIVATE_MODE)
+        filterModePref  = preference.getInt(FILTER, 0)
+
+        if (filterModePref != filterMode) {
+            changeFilter(filterModePref)
+        } else {
+            changeFilter(filterModePref)
+        }
+    }
+
+    private fun changeFilter(filter: Int) {
+        when (filter) {
+            0 -> {
+                filterMode = 0
+                itemViewModel.allItemsAsc.observe(this, Observer { items ->
+                    items?.let { recyclerAdapter.setItems(it) }
+                })
+            }
+            1 -> {
+                filterMode = 1
+                itemViewModel.allItemsDesc.observe(this, Observer { items ->
+                    items?.let { recyclerAdapter.setItems(it) }
+                })
+            }
+            2 -> {
+                filterMode = 2
+                itemViewModel.dateItemsAsc.observe(this, Observer { items ->
+                    items?.let { recyclerAdapter.setItems(it) }
+                })
+            }
+            3 -> {
+                filterMode = 3
+                itemViewModel.dateItemDesc.observe(this, Observer { items ->
+                    items?.let { recyclerAdapter.setItems(it) }
+                })
+            }
+        }
+        changeFilterMode()
+    }
+
+    private fun changeFilterMode() {
+        val preference: SharedPreferences = getSharedPreferences(filePath, PRIVATE_MODE)
+        val editor = preference.edit()
+        editor.putInt(FILTER, filterMode)
+        editor.commit()
+    }
+
+    private fun setThemeMode() {
+        val preference: SharedPreferences = getSharedPreferences(filePath, PRIVATE_MODE)
+        val editor = preference.edit()
+        editor.putBoolean(DARK_MODE, darkModeCurrent)
+        editor.commit()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -84,19 +171,17 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
         // Zuständig für Positionierung innerhalb RecyclerView
         recylerView.layoutManager = LinearLayoutManager(this)
         recylerView.setHasFixedSize(true)
-
-//        getDBSize()
     }
 
     private fun getDBSize() {
         // warten bis observer ausgeführt -> erst dann size benutzen
-        catviewModel.checkDB.observe(this, Observer { categorys ->
-            categorys?.let { waitForObserver(it) }
+        itemViewModel.checkDB.observe(this, Observer { items ->
+            items?.let { waitForObserver(it.toInt()) }
         })
     }
 
-    private fun waitForObserver(dbSize: Integer) {
-        size = dbSize.toInt()
+    private fun waitForObserver(dbSize: Int) {
+        size = dbSize
         checkIfEmptyRecyclerView()
     }
 
@@ -115,17 +200,17 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == RESPONSE_CATEGORY && resultCode == RESULT_OK) {
+        if (requestCode == RESPONSE_ITEM && resultCode == RESULT_OK) {
             val message = data?.getStringExtra(MESSAGE)
 
-            data?.getStringExtra(CATEGORY)?.let {
+            data?.getStringExtra(ITEM)?.let {
                 if (message != null) {
                     createSnackBar(rootLayout, message)
                 }
                 Unit
             }
         }
-                getDBSize()
+        getDBSize()
     }
 
     private fun createSnackBar(view: View, message: String) {
@@ -133,88 +218,50 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
         snackBar.setAction("Hide") { snackBar.dismiss() }.show()
     }
 
-    override fun onItemClick(category: Category, position: Int) {
-        this.category = category
-//        setupPermissions()
-//        makeRequest()
+    override fun onItemClick(item: Item, position: Int) {
+        this.item = item
         loadContentFromRoom()
     }
 
     private fun loadContentFromRoom() {
-        val intent = Intent(this, CategoryOverview::class.java)
-        val itemCategory = category.name
-        val itemDescription = category.description
-        val picture = category.picture
-        intent.putExtra(CATEGORY, itemCategory)
+        val intent = Intent(this, ItemOverview::class.java)
+        val itemTitle = item.name
+        val itemDescription = item.description
+        val picture = item.picture
+        val date = item.date
+        intent.putExtra(ITEM, itemTitle)
         intent.putExtra(DESCRIPTION, itemDescription)
         intent.putExtra(PICTURE, picture)
-        startActivityForResult(intent, RESPONSE_CATEGORY)
-    }
-
-    private fun setupPermissions() {
-        val status = ContextCompat.checkSelfPermission(this, permission)
-
-        if (status != PackageManager.PERMISSION_GRANTED) {
-            logStateChange("Permission for Gallery required")
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, permission)) {
-                val builder = AlertDialog.Builder(this)
-                builder.setMessage("Permission to access external Storage is required")
-                    .setTitle("Permission required")
-                builder.setPositiveButton("OK") { dialog, id ->
-                    logStateChange("ok clicked")
-                    makeRequest()
-                }
-                val dialog = builder.create()
-                dialog.show()
-            } else {
-//                makeRequest()
-            }
-        }
-        makeRequest()
-    }
-
-    private fun makeRequest() {
-        ActivityCompat.requestPermissions(this, arrayOf(permission), CALLBACK_CODE)
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
-    ) {
-        when (requestCode) {
-            CALLBACK_CODE -> {
-                if (grantResults.isEmpty() || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-                    logStateChange("Permission denied")
-                } else {
-                    logStateChange("Permission granted")
-                    loadContentFromRoom()
-                }
-            }
-        }
+        intent.putExtra(DATE, date)
+        startActivityForResult(intent, RESPONSE_ITEM)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_settings -> {
-                if (darkMode) {
-                    darkMode = false
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                    delegate.applyDayNight()
-                } else {
-                    darkMode = true
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-                    delegate.applyDayNight()
-                }
+                changeTheme()
                 true
             }
             else -> super.onOptionsItemSelected(item)
         }
     }
 
+    private fun changeTheme() {
+        if (darkModeCurrent) {
+            darkModeCurrent = false
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+            delegate.applyDayNight()
+        } else {
+            darkModeCurrent = true
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+            delegate.applyDayNight()
+        }
+        setThemeMode()
+    }
+
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
         val item = menu!!.findItem(R.id.action_settings)
-        if (darkMode) {
+        if (darkModeCurrent) {
             item.title = "Light Mode"
         } else {
             item.title = "Dark Mode"

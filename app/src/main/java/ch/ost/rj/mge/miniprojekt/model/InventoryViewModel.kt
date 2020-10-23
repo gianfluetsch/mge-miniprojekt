@@ -13,35 +13,40 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
 
     private val repository: Repository
     val checkDB: LiveData<Integer>
-    val categorysDao: Dao
+    private val itemsDao: Dao = InventoryDatabase.getDatabase(application, viewModelScope).categoryDao()
 
-    val allCategorys: LiveData<List<Category>>
+    val allItemsAsc: LiveData<List<Item>>
+    val allItemsDesc: LiveData<List<Item>>
+    val dateItemsAsc: LiveData<List<Item>>
+    val dateItemDesc: LiveData<List<Item>>
 
     init {
-        categorysDao = InventoryDatabase.getDatabase(application, viewModelScope).categoryDao()
-        repository = Repository(categorysDao)
-        allCategorys = repository.allCategorys
+        repository = Repository(itemsDao)
+        allItemsAsc = repository.allItemsAsc
+        allItemsDesc = repository.allItemsDesc
+        dateItemsAsc = repository.dateItemsAsc
+        dateItemDesc = repository.dateItemsDesc
         checkDB = repository.sumItems
     }
 
-    fun insert(category: Category) = viewModelScope.launch(Dispatchers.IO) {
-        repository.insert(category)
+    fun insert(item: Item) = viewModelScope.launch(Dispatchers.IO) {
+        repository.insert(item)
+    }
+
+    fun insertReplace(item: Item) = viewModelScope.launch(Dispatchers.IO) {
+        repository.insertReplace(item)
     }
 
     fun DBCount() : LiveData<Integer> {
         return checkDB
     }
 
-    fun deleteCategory(category: Category) = viewModelScope.launch (Dispatchers.IO) {
-        repository.deleteCategory(category)
+    fun deleteItem(item: Item) = viewModelScope.launch (Dispatchers.IO) {
+        repository.deleteCategory(item)
     }
 
-//    fun checkItemExist(itemName: String) = viewModelScope.launch (Dispatchers.IO){
-//        repository.checkItemExists(itemName)
-//    }
-
     fun checkItemExist(itemName: String) : LiveData<Integer> {
-        val checkItem = categorysDao.checkItemExists(itemName)
+        val checkItem = itemsDao.checkItemExists(itemName)
         return checkItem
 
     }

@@ -1,19 +1,27 @@
 <resources>
     <string name="app_name">miniprojekt</string>
     <string name="app_title">Inventory</string>
-    <string name="app_add_category">Add Category</string>
+    <string name="app_add_item">Add Item</string>
     <string name="action_settings">Dark Mode</string>
     <string name="new_category_name">Name</string>
     <string name="add_category_save">Save</string>
     <string name="add_item">Add Item</string>
     <string name="new_item_description">Description</string>
-    <string name="no_data_available">No Category available</string>
+    <string name="no_data_available">No Items available</string>
     <string name="no_data_available_category">No Item available</string>
     <string name="select_image_dialog">Select Image</string>
     <string-array name="image_options">
         <item>Choose from gallery</item>
         <item>Choose from camera</item>
     </string-array>
+    <string name="select_filter_dialog">Select Filter</string>
+    <string-array name="filter_options">
+        <item>Name Asc</item>
+        <item>Name Desc</item>
+        <item>Date Asc</item>
+        <item>Date Desc</item>
+    </string-array>
+    <string name="select_date">Select Date</string>
     <string name="appwidget_text">Add Item</string>
     <string name="add_widget">Add widget</string>
     <string name="button_widget">Add Item</string>

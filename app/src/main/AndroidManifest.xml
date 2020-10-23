@@ -3,13 +3,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="ch.ost.rj.mge.miniprojekt">
 
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
-        android:label=""
+        android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
@@ -34,10 +33,10 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activities.CreateCategory"
+            android:name=".activities.CreateItem"
             android:parentActivityName=".activities.Overview" />
         <activity
-            android:name=".activities.CategoryOverview"
+            android:name=".activities.ItemOverview"
             android:parentActivityName=".activities.Overview" />
     </application>
 
