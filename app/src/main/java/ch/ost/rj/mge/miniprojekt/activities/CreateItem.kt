@@ -2,14 +2,15 @@ package ch.ost.rj.mge.miniprojekt.activities
 
 import android.app.AlertDialog
 import android.app.DatePickerDialog
+import android.content.ContentValues
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
@@ -26,20 +27,20 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.OutputStream
-import java.time.LocalDate
 import java.util.*
 
 class CreateItem : AppCompatActivity() {
 
     private lateinit var btnSaveItem: Button
     private lateinit var itemTitleInput: String
-    private var itemDescriptionInput: String = ""
+    private lateinit var itemDescriptionInput: String
     private lateinit var editViewName: EditText
     private lateinit var editDescription: EditText
+    private lateinit var textViewToolbar: TextView
     private lateinit var imageView: ImageView
     private lateinit var btnImage: Button
     private lateinit var btnDate: Button
-    private var imageUri: String = ""
+    private lateinit var imageUri: String
     private lateinit var itemViewModel: InventoryViewModel
     private lateinit var itemTitle: String
     private lateinit var itemDescription: String
@@ -47,38 +48,39 @@ class CreateItem : AppCompatActivity() {
     private lateinit var itemDate: String
     private var modified = false
     private lateinit var titleOld: String
-    private var dateInput: String = ""
     private lateinit var textViewDate: TextView
-    val calendar= Calendar.getInstance()
-    val year = calendar.get(Calendar.YEAR)
-    val month = calendar.get(Calendar.MONTH)
-    val day = calendar.get(Calendar.DAY_OF_MONTH)
-    private var date = "$year-${month+1}-$day"
+    private val calendar: Calendar = Calendar.getInstance()
+    private val year = calendar.get(Calendar.YEAR)
+    private val month = calendar.get(Calendar.MONTH)
+    private val day = calendar.get(Calendar.DAY_OF_MONTH)
+    private var date = "$year-${month + 1}-$day"
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_create_item)
 
-        editViewName = findViewById<EditText>(R.id.item_name_edit)
-        btnSaveItem = findViewById<Button>(R.id.add_item_button_save)
-        editDescription = findViewById<EditText>(R.id.item_description_edit)
-        imageView = findViewById<ImageView>(R.id.imageView)
-        btnImage = findViewById<Button>(R.id.add_image)
-        btnDate = findViewById<Button>(R.id.add_date)
-        textViewDate = findViewById<TextView>(R.id.textview_date)
-
-        textViewDate.text = "$day.${month+1}.$year"
+        editViewName = findViewById(R.id.item_name_edit)
+        btnSaveItem = findViewById(R.id.add_item_button_save)
+        editDescription = findViewById(R.id.item_description_edit)
+        imageView = findViewById(R.id.imageView)
+        btnImage = findViewById(R.id.add_image)
+        btnDate = findViewById(R.id.add_date)
+        textViewDate = findViewById(R.id.textview_date)
+        textViewToolbar = findViewById(R.id.tv_toolbar_custom)
 
         checkModified()
-        validateInput()
 
         itemViewModel = ViewModelProvider(this).get(InventoryViewModel::class.java)
 
+    }
+
+    private fun saveItem() {
         btnSaveItem.setOnClickListener {
-            var message: String = ""
+            var message: String
             val itemNew = Item(itemTitleInput, itemDescriptionInput, imageUri, date)
             if (modified) {
-                if (itemTitleInput.equals(titleOld)) {
+                if (itemTitleInput == titleOld) {
                     itemViewModel.insertReplace(itemNew)
                     waitForObserver("modified")
                 } else {
@@ -89,7 +91,7 @@ class CreateItem : AppCompatActivity() {
                 }
             } else {
                 itemViewModel.checkItemExist(itemTitleInput)
-                    .observeOnce(this, Observer { items ->
+                    .observeOnce(this, { items ->
                         items?.let {
                             if (it.toInt() == 0) {
                                 message = "Item $itemTitleInput added"
@@ -110,9 +112,15 @@ class CreateItem : AppCompatActivity() {
         modified = intent.getBooleanExtra(Overview.MODIFY, false)
         if (modified) {
             itemTitle = intent.getStringExtra(Overview.ITEM)!!
+            itemTitleInput = itemTitle
             itemDescription = intent.getStringExtra(Overview.DESCRIPTION)!!
+            itemDescriptionInput = itemDescription
             itemPicture = intent.getStringExtra(Overview.PICTURE)!!
+            imageUri = itemPicture
             itemDate = intent.getStringExtra(Overview.DATE)!!
+            date = itemDate
+            textViewToolbar.text = "Modify $itemTitle"
+            textViewToolbar.text = String.format("Modify ")
 
             editViewName.text.insert(0, itemTitle)
             editDescription.text.insert(0, itemDescription)
@@ -120,11 +128,17 @@ class CreateItem : AppCompatActivity() {
             textViewDate.text = itemDate
 
             titleOld = itemTitle
+        } else {
+            itemDescriptionInput = ""
+            imageUri = ""
+            textViewDate.text = "$day.${month + 1}.$year"
         }
+
+        validateInput()
 
     }
 
-    fun waitForObserver(message: String) {
+    private fun waitForObserver(message: String) {
         val resultIntent = Intent(this, Overview::class.java)
         resultIntent.putExtra(Overview.ITEM, itemTitleInput)
         resultIntent.putExtra(Overview.MESSAGE, message)
@@ -133,7 +147,7 @@ class CreateItem : AppCompatActivity() {
         finish()
     }
 
-    fun <T> LiveData<T>.observeOnce(lifecycleOwner: LifecycleOwner, observer: Observer<T>) {
+    private fun <T> LiveData<T>.observeOnce(lifecycleOwner: LifecycleOwner, observer: Observer<T>) {
         observe(lifecycleOwner, object : Observer<T> {
             override fun onChanged(t: T?) {
                 observer.onChanged(t)
@@ -148,7 +162,8 @@ class CreateItem : AppCompatActivity() {
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 itemTitleInput = editViewName.text.toString().trim()
-                btnSaveItem.isEnabled = !itemTitleInput.isNullOrBlank()
+                textViewToolbar.text = "Add $itemTitleInput"
+                btnSaveItem.isEnabled = !itemTitleInput.isBlank()
             }
 
             override fun afterTextChanged(s: Editable?) {}
@@ -159,8 +174,10 @@ class CreateItem : AppCompatActivity() {
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 itemDescriptionInput = editDescription.text.toString()
+                if (modified) {
+                    btnSaveItem.isEnabled = !itemDescriptionInput.isBlank()
+                }
             }
-
             override fun afterTextChanged(s: Editable?) {}
         })
 
@@ -173,9 +190,12 @@ class CreateItem : AppCompatActivity() {
 
             val datePickerDialog = DatePickerDialog(
                 this,
-                DatePickerDialog.OnDateSetListener { view, year, month, dayOfMonth ->
+                { view, year, month, dayOfMonth ->
                     textViewDate.text = "$dayOfMonth.${month + 1}.$year"
-                    date = "$year-${month+1}-$dayOfMonth"
+                    date = "$year-${month + 1}-$dayOfMonth"
+                    if (modified) {
+                        btnSaveItem.isEnabled = !date.isBlank()
+                    }
                 },
                 year,
                 month,
@@ -185,6 +205,8 @@ class CreateItem : AppCompatActivity() {
 
 
         }
+
+        saveItem()
     }
 
     private fun getImageFromGallery() {
@@ -230,24 +252,32 @@ class CreateItem : AppCompatActivity() {
             val uri: Uri = saveImageToExternalStorage(bitmap)
             imageUri = uri.toString()
         }
+        if (modified) {
+            btnSaveItem.isEnabled = !imageUri.isBlank()
+        }
 
     }
 
     private fun saveImageToExternalStorage(bitmap: Bitmap): Uri {
-        val file = File(this.externalCacheDir!!.absolutePath,"${UUID.randomUUID()}.jpg")
-        try {
-            val stream: OutputStream = FileOutputStream(file)
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
-            stream.flush()
-            stream.close()
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
-        return Uri.parse(file.absolutePath)
-    }
+        val fileName = "${UUID.randomUUID()}.jpg"
+        var fos: OutputStream? = null
+        var imageUriProv : Uri? = null
 
-    private fun logStateChange(callback: String) {
-        Log.d("MGE.MP.DEBUG", "Method: $callback")
+        contentResolver?.also { resolver ->
+            val contentValues = ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+                put(MediaStore.MediaColumns.MIME_TYPE, "image/jpg")
+                put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
+            }
+            imageUriProv =
+                resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+            fos = imageUriProv?.let { resolver.openOutputStream(it) }
+
+        }
+        fos?.use { bitmap.compress(Bitmap.CompressFormat.JPEG, 100, it) }
+        imageUri = imageUriProv.toString()
+        return Uri.parse(imageUri)
+
     }
 
 }

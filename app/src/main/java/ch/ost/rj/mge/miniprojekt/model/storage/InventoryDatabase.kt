@@ -4,9 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.sqlite.db.SupportSQLiteDatabase
 import ch.ost.rj.mge.miniprojekt.model.Item
-import kotlinx.coroutines.CoroutineScope
 
 @Database(entities = [Item::class], version = 1, exportSchema = false)
 abstract class InventoryDatabase : RoomDatabase() {
@@ -19,11 +17,10 @@ abstract class InventoryDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: InventoryDatabase? = null
 
-        fun getDatabase(context: Context, scope: CoroutineScope): InventoryDatabase {
+        fun getDatabase(context: Context): InventoryDatabase {
 
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(context.applicationContext, InventoryDatabase::class.java, "inventory_database")
-                    .addCallback(InventoryDatabaseCallback(scope))
                     .build()
                 INSTANCE = instance
                 instance
@@ -31,15 +28,4 @@ abstract class InventoryDatabase : RoomDatabase() {
         }
     }
 
-    private class InventoryDatabaseCallback(private val scope: CoroutineScope) : RoomDatabase.Callback() {
-
-        override fun onOpen(db: SupportSQLiteDatabase) {
-            super.onOpen(db)
-        }
-
-        suspend fun populateDatabase(categoryDao: Dao) {
-            categoryDao.deleteAll()
-
-        }
-    }
 }

@@ -3,7 +3,6 @@ package ch.ost.rj.mge.miniprojekt.activities
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.text.InputType
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
@@ -33,12 +32,12 @@ class ItemOverview : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_overview_item)
 
-        itemTitle = findViewById<TextView>(R.id.tv_toolbar_custom)
-        itemDescription = findViewById<TextView>(R.id.item_description_info)
-        itemPicture = findViewById<ImageView>(R.id.imageView)
-        buttonDelete = findViewById<Button>(R.id.button_delete)
-        buttonEdit = findViewById<FloatingActionButton>(R.id.button_modify)
-        itemDate = findViewById<TextView>(R.id.item_date_info)
+        itemTitle = findViewById(R.id.tv_toolbar_custom)
+        itemDescription = findViewById(R.id.item_description_info)
+        itemPicture = findViewById(R.id.imageView)
+        buttonDelete = findViewById(R.id.button_delete)
+        buttonEdit = findViewById(R.id.button_modify)
+        itemDate = findViewById(R.id.item_date_info)
 
         val intent = intent
         item = intent.getStringExtra(Overview.ITEM)!!
@@ -58,8 +57,6 @@ class ItemOverview : AppCompatActivity() {
         val year = dateFormatted[0]
         val month = dateFormatted[1]
         val day = dateFormatted[2]
-
-
         itemDate.text = "$day.$month.$year"
 
         itemViewModel = ViewModelProvider(this).get(InventoryViewModel::class.java)
@@ -67,12 +64,12 @@ class ItemOverview : AppCompatActivity() {
         buttonDelete.setOnClickListener {
             val builder = AlertDialog.Builder(this)
             builder.setMessage("Do you really want to delete item $item").setTitle("Delete Item $item")
-            builder.setPositiveButton("YES") {dialog, id ->
+            builder.setPositiveButton("YES") { _, _ ->
                 val item = Item(item, description, picture, date)
                 itemViewModel.deleteItem(item)
                 finish()
             }
-            builder.setNegativeButton("NO") {dialog, id ->
+            builder.setNegativeButton("NO") { dialog, _ ->
                 dialog.cancel()
             }
             val dialog = builder.create()
@@ -81,13 +78,13 @@ class ItemOverview : AppCompatActivity() {
         }
 
         buttonEdit.setOnClickListener {
-            val intent = Intent(this, CreateItem::class.java)
-            intent.putExtra(Overview.ITEM, item)
-            intent.putExtra(Overview.DESCRIPTION, description)
-            intent.putExtra(Overview.PICTURE, picture)
-            intent.putExtra(Overview.DATE, date)
-            intent.putExtra(Overview.MODIFY, true)
-            startActivity(intent)
+            val intentNewItem = Intent(this, CreateItem::class.java)
+            intentNewItem.putExtra(Overview.ITEM, item)
+            intentNewItem.putExtra(Overview.DESCRIPTION, description)
+            intentNewItem.putExtra(Overview.PICTURE, picture)
+            intentNewItem.putExtra(Overview.DATE, date)
+            intentNewItem.putExtra(Overview.MODIFY, true)
+            startActivity(intentNewItem)
             finish()
         }
 

@@ -34,9 +34,11 @@
         </activity>
         <activity
             android:name=".activities.CreateItem"
+            android:theme="@style/AppTheme.NoActionBar"
             android:parentActivityName=".activities.Overview" />
         <activity
             android:name=".activities.ItemOverview"
+            android:theme="@style/AppTheme.NoActionBar"
             android:parentActivityName=".activities.Overview" />
     </application>
 

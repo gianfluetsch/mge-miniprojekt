@@ -1,9 +1,9 @@
 package ch.ost.rj.mge.miniprojekt.activities
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -12,7 +12,6 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import ch.ost.rj.mge.miniprojekt.R
@@ -40,8 +39,8 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
         var themeModePref = false
         var filterModePref = 0
         var size = 0
-        val filePath = "ch.ost.rj.mge.miniprojekt.preferences"
-        const val DARK_MODE = "darkmode";
+        const val filePath = "ch.ost.rj.mge.miniprojekt.preferences"
+        const val DARK_MODE = "darkmode"
         const val FILTER = "filter"
         private var PRIVATE_MODE = 0
     }
@@ -59,10 +58,10 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_overview)
         setSupportActionBar(findViewById(R.id.toolbar))
-        emptyView = findViewById<TextView>(R.id.empty_view)
-        emptyImageView = findViewById<ImageView>(R.id.empty_imageView)
-        btnFilterItems = findViewById<Button>(R.id.button_filter)
-        btnAddItem = findViewById<FloatingActionButton>(R.id.add_item_button)
+        emptyView = findViewById(R.id.empty_view)
+        emptyImageView = findViewById(R.id.empty_imageView)
+        btnFilterItems = findViewById(R.id.button_filter)
+        btnAddItem = findViewById(R.id.add_item_button)
 
         itemViewModel = ViewModelProvider(this).get(InventoryViewModel::class.java)
         btnAddItem.setOnClickListener {
@@ -120,25 +119,25 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
         when (filter) {
             0 -> {
                 filterMode = 0
-                itemViewModel.allItemsAsc.observe(this, Observer { items ->
+                itemViewModel.allItemsAsc.observe(this, { items ->
                     items?.let { recyclerAdapter.setItems(it) }
                 })
             }
             1 -> {
                 filterMode = 1
-                itemViewModel.allItemsDesc.observe(this, Observer { items ->
+                itemViewModel.allItemsDesc.observe(this, { items ->
                     items?.let { recyclerAdapter.setItems(it) }
                 })
             }
             2 -> {
                 filterMode = 2
-                itemViewModel.dateItemsAsc.observe(this, Observer { items ->
+                itemViewModel.dateItemsAsc.observe(this, { items ->
                     items?.let { recyclerAdapter.setItems(it) }
                 })
             }
             3 -> {
                 filterMode = 3
-                itemViewModel.dateItemDesc.observe(this, Observer { items ->
+                itemViewModel.dateItemDesc.observe(this, { items ->
                     items?.let { recyclerAdapter.setItems(it) }
                 })
             }
@@ -146,6 +145,7 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
         changeFilterMode()
     }
 
+    @SuppressLint("ApplySharedPref")
     private fun changeFilterMode() {
         val preference: SharedPreferences = getSharedPreferences(filePath, PRIVATE_MODE)
         val editor = preference.edit()
@@ -153,6 +153,7 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
         editor.commit()
     }
 
+    @SuppressLint("ApplySharedPref")
     private fun setThemeMode() {
         val preference: SharedPreferences = getSharedPreferences(filePath, PRIVATE_MODE)
         val editor = preference.edit()
@@ -175,7 +176,7 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
 
     private fun getDBSize() {
         // warten bis observer ausgeführt -> erst dann size benutzen
-        itemViewModel.checkDB.observe(this, Observer { items ->
+        itemViewModel.checkDB.observe(this, { items ->
             items?.let { waitForObserver(it.toInt()) }
         })
     }
@@ -268,9 +269,5 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
         }
 
         return super.onPrepareOptionsMenu(menu)
-    }
-
-    private fun logStateChange(callback: String) {
-        Log.d("MGE.MP.DEBUG", "Method: $callback")
     }
 }

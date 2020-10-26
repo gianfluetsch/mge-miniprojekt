@@ -12,8 +12,8 @@ import kotlinx.coroutines.launch
 class InventoryViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: Repository
-    val checkDB: LiveData<Integer>
-    private val itemsDao: Dao = InventoryDatabase.getDatabase(application, viewModelScope).categoryDao()
+    val checkDB: LiveData<Int>
+    private val itemsDao: Dao = InventoryDatabase.getDatabase(application).categoryDao()
 
     val allItemsAsc: LiveData<List<Item>>
     val allItemsDesc: LiveData<List<Item>>
@@ -37,17 +37,11 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
         repository.insertReplace(item)
     }
 
-    fun DBCount() : LiveData<Integer> {
-        return checkDB
-    }
-
     fun deleteItem(item: Item) = viewModelScope.launch (Dispatchers.IO) {
         repository.deleteCategory(item)
     }
 
-    fun checkItemExist(itemName: String) : LiveData<Integer> {
-        val checkItem = itemsDao.checkItemExists(itemName)
-        return checkItem
-
+    fun checkItemExist(itemName: String) : LiveData<Int> {
+        return itemsDao.checkItemExists(itemName)
     }
 }

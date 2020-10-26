@@ -8,7 +8,7 @@ class Repository (private val itemDao: Dao){
     val allItemsDesc: LiveData<List<Item>> = itemDao.getItemsDesc()
     val dateItemsAsc: LiveData<List<Item>> = itemDao.getDateAsc()
     val dateItemsDesc: LiveData<List<Item>> = itemDao.getDateDesc()
-    val sumItems: LiveData<Integer> = itemDao.isDBEmpty()
+    val sumItems: LiveData<Int> = itemDao.isDBEmpty()
 
     suspend fun insert(item: Item) {
         itemDao.insert(item)
@@ -18,15 +18,7 @@ class Repository (private val itemDao: Dao){
         itemDao.insertReplace(item)
     }
 
-    fun isDBEmpty() {
-        itemDao.isDBEmpty()
-    }
-
     suspend fun deleteCategory(item: Item) {
         itemDao.deleteItem(item)
-    }
-
-    fun checkItemExists(itemName: String) {
-        itemDao.checkItemExists(itemName)
     }
 }

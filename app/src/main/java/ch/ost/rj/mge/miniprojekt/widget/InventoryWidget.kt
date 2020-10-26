@@ -40,12 +40,11 @@ internal fun updateAppWidget(
     appWidgetManager: AppWidgetManager,
     appWidgetId: Int
 ) {
-    val FLAGS = 0;
-    val REQUEST_CODE = 0
-    val widgetText = context.getString(R.string.appwidget_text)
+    val flags = 0
+    val requestCode = 0
 
     val intent = Intent(context, CreateItem::class.java)
-    val pendingIntent = PendingIntent.getActivity(context,  REQUEST_CODE, intent, FLAGS)
+    val pendingIntent = PendingIntent.getActivity(context,  requestCode, intent, flags)
 
     // Construct the RemoteViews object
     val views = RemoteViews(context.packageName, R.layout.inventory_widget)

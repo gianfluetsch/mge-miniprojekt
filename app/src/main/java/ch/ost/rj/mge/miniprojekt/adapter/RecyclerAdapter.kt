@@ -9,16 +9,20 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import ch.ost.rj.mge.miniprojekt.R
 import ch.ost.rj.mge.miniprojekt.model.Item
+import com.bumptech.glide.Glide
 import kotlinx.android.synthetic.main.model_item.view.*
 
 class RecyclerAdapter(private val listener: OnItemClickListener) :
     RecyclerView.Adapter<RecyclerAdapter.ViewHolder>() {
 
     private var items = emptyList<Item>()
+    lateinit var inflater : LayoutInflater
+
 
     // Called by RecyclerView, when new ViewHolder is created, Parent = RecyclerView
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         // LayoutInflater turns xml in Layout-Object
+        inflater = LayoutInflater.from(parent.context)
         val itemView =
             LayoutInflater.from(parent.context).inflate(R.layout.model_item, parent, false)
         return ViewHolder(itemView)
@@ -29,10 +33,12 @@ class RecyclerAdapter(private val listener: OnItemClickListener) :
         val currentItem = items[position]
 
         holder.textViewTitle.text = currentItem.name
-        if (currentItem.picture.equals("")) {
+        if (currentItem.picture == "") {
             holder.imageView.setImageResource(R.drawable.ic_baseline_android_64)
         } else {
-            holder.imageView.setImageURI(Uri.parse(currentItem.picture))
+            var context = holder
+            Glide.with(inflater.context).load(Uri.parse(currentItem.picture)).circleCrop().into(holder.imageView)
+//            holder.imageView.setImageURI(Uri.parse(currentItem.picture))
         }
     }
 
@@ -51,7 +57,6 @@ class RecyclerAdapter(private val listener: OnItemClickListener) :
         val imageView: ImageView = itemView.image_view
         val textViewTitle: TextView = itemView.text_title
 
-        // Coming....Bei Click on Image
         init {
             itemView.setOnClickListener(this)
         }

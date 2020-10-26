@@ -7,7 +7,7 @@ import ch.ost.rj.mge.miniprojekt.model.Item
 
 
 @Dao
-public interface Dao {
+interface Dao {
 
     @Query("SELECT * from item_table ORDER BY name ASC")
     fun getItemsAsc(): LiveData<List<Item>>
@@ -22,10 +22,10 @@ public interface Dao {
     fun getDateDesc(): LiveData<List<Item>>
 
     @Query("SELECT COUNT(name) from item_table")
-    fun isDBEmpty(): LiveData<Integer>
+    fun isDBEmpty(): LiveData<Int>
 
     @Query("SELECT COUNT(1) FROM item_table WHERE name = :itemName")
-    fun checkItemExists(itemName: String): LiveData<Integer>
+    fun checkItemExists(itemName: String): LiveData<Int>
 
     // ignores a new word if it's exactly the same as one already in the list
     @Insert(onConflict = OnConflictStrategy.IGNORE)
