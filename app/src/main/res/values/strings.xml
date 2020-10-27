@@ -6,6 +6,7 @@
     <string name="new_category_name">Name</string>
     <string name="add_category_save">Save</string>
     <string name="add_item">Add Item</string>
+    <string name="hint_title">Title</string>
     <string name="new_item_description">Description</string>
     <string name="no_data_available">No Items available</string>
     <string name="no_data_available_category">No Item available</string>

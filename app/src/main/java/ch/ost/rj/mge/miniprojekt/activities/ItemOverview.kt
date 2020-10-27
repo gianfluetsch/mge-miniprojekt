@@ -85,7 +85,6 @@ class ItemOverview : AppCompatActivity() {
             }
             val dialog = builder.create()
             dialog.show()
-
         }
 
         buttonEdit.setOnClickListener {
@@ -99,6 +98,5 @@ class ItemOverview : AppCompatActivity() {
             startActivity(intentNewItem)
             finish()
         }
-
     }
 }

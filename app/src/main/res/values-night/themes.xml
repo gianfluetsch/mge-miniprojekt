@@ -2,9 +2,9 @@
 
     <style name="ThemeOverlay.Miniprojekt.AppWidgetContainer" parent="">
         <item name="appWidgetBackgroundColor">@color/light_blue_900</item>
-        <item name="appWidgetTextColor">@color/light_blue_200</item>
+        <item name="appWidgetTextColor">@color/white</item>
+        <item name="android:textColor">?attr/colorSecondary</item>
     </style>
-
 
 
 </resources>

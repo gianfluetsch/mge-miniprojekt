@@ -11,10 +11,7 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.TextView
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
@@ -84,24 +81,23 @@ class CreateItem : AppCompatActivity() {
             if (modified) {
                 if (itemTitleInput == titleOld) {
                     itemViewModel.insertReplace(itemNew)
-                    waitForObserver("modified")
+                    waitForObserver("Item $itemTitleInput modified")
                 } else {
                     val itemOld = Item(titleOld, itemDescription, itemPicture, date, itemFavorite)
                     itemViewModel.deleteItem(itemOld)
                     itemViewModel.insert(itemNew)
-                    waitForObserver("modified")
+                    waitForObserver("Item $titleOld modified")
                 }
             } else {
                 itemViewModel.checkItemExist(itemTitleInput)
                     .observeOnce(this, { items ->
                         items?.let {
-                            if (it.toInt() == 0) {
+                            if (it == 0) {
                                 message = "Item $itemTitleInput added"
                                 itemViewModel.insert(itemNew)
                                 waitForObserver(message)
                             } else {
-                                message = "Item $itemTitleInput exists already"
-                                waitForObserver(message)
+                                Toast.makeText(this, "Item $itemTitleInput exists already", Toast.LENGTH_SHORT).show()
                             }
                         }
                     })
@@ -166,7 +162,6 @@ class CreateItem : AppCompatActivity() {
         resultIntent.putExtra(Overview.ITEM, itemTitleInput)
         resultIntent.putExtra(Overview.MESSAGE, message)
         setResult(RESULT_OK, resultIntent)
-
         finish()
     }
 
@@ -300,7 +295,6 @@ class CreateItem : AppCompatActivity() {
         fos?.use { bitmap.compress(Bitmap.CompressFormat.JPEG, 100, it) }
         imageUri = imageUriProv.toString()
         return Uri.parse(imageUri)
-
     }
 
 }

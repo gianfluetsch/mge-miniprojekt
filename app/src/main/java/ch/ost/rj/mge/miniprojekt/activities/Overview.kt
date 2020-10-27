@@ -12,6 +12,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.view.isVisible
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
@@ -21,6 +22,7 @@ import ch.ost.rj.mge.miniprojekt.R
 import ch.ost.rj.mge.miniprojekt.adapter.RecyclerAdapter
 import ch.ost.rj.mge.miniprojekt.model.InventoryViewModel
 import ch.ost.rj.mge.miniprojekt.model.Item
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_overview.*
@@ -41,12 +43,14 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener,
         const val FAVORITE = "favorite"
         var darkModeCurrent = false
         var filterMode = 0
+        var navViewMode = R.id.action_all
         var themeModePref = false
         var filterModePref = 0
         var size = 0
         const val filePath = "ch.ost.rj.mge.miniprojekt.preferences"
         const val DARK_MODE = "darkmode"
         const val FILTER = "filter"
+        const val NAVVIEW = "navview"
         private var PRIVATE_MODE = 0
     }
 
@@ -57,13 +61,15 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener,
     private lateinit var itemViewModel: InventoryViewModel
     private lateinit var item: Item
     private lateinit var btnFilterItems: Button
-    private lateinit var btnFavorite: Button
+    private lateinit var navigationView: BottomNavigationView
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_overview)
         setSupportActionBar(findViewById(R.id.toolbar))
+
+        navigationView = findViewById(R.id.nav_view)
         emptyView = findViewById(R.id.empty_view)
         emptyImageView = findViewById(R.id.empty_imageView)
         btnFilterItems = findViewById(R.id.button_filter)
@@ -82,6 +88,31 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener,
         getDBSize()
         getThemeMode()
         getFilterMode()
+        getNavViewMode()
+
+        navigationView.setOnNavigationItemSelectedListener { item ->
+            setNavView(item.itemId)
+            true
+        }
+    }
+
+    private fun setNavView(itemId: Int) {
+        when (itemId) {
+            R.id.action_all -> {
+                navViewMode = R.id.action_all
+                btnFilterItems.isVisible = true
+                changeFilter(filterModePref)
+                setNavViewMode(itemId)
+            }
+            R.id.action_favorites -> {
+                navViewMode = R.id.action_favorites
+                btnFilterItems.isVisible = false
+                itemViewModel.allFavorites.observe(this, { items ->
+                    items?.let { recyclerAdapter.setItems(it) }
+                })
+                setNavViewMode(itemId)
+            }
+        }
     }
 
     private fun filterItems() {
@@ -101,6 +132,23 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener,
         dialog.show()
     }
 
+
+    private fun getNavViewMode() {
+        val preference: SharedPreferences = getSharedPreferences(filePath, PRIVATE_MODE)
+        val navViewModePref = preference.getInt(NAVVIEW, 0)
+
+        if (navViewModePref != navViewMode) {
+            navigationView.selectedItemId = navViewModePref
+            setNavView(navViewModePref)
+        }
+    }
+
+    private fun setNavViewMode(id: Int) {
+        val preference: SharedPreferences = getSharedPreferences(filePath, PRIVATE_MODE)
+        val editor = preference.edit()
+        editor.putInt(NAVVIEW, id)
+        editor.commit()
+    }
 
     private fun getThemeMode() {
         val preference: SharedPreferences = getSharedPreferences(filePath, PRIVATE_MODE)
@@ -138,7 +186,7 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener,
             }
             2 -> {
                 filterMode = 2
-                itemViewModel.allFavorites.observe(this, { items ->
+                itemViewModel.sortFavorites.observe(this, { items ->
                     items?.let { recyclerAdapter.setItems(it) }
                 })
             }
@@ -182,15 +230,13 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener,
 
     private fun updateRecyclerView() {
         recylerView.adapter = recyclerAdapter
-        // Zuständig für Positionierung innerhalb RecyclerView
         recylerView.layoutManager = LinearLayoutManager(this)
         recylerView.setHasFixedSize(true)
     }
 
     private fun getDBSize() {
-        // warten bis observer ausgeführt -> erst dann size benutzen
         itemViewModel.checkDB.observe(this, { items ->
-            items?.let { waitForObserver(it.toInt()) }
+            items?.let { waitForObserver(it) }
         })
     }
 
@@ -216,7 +262,6 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener,
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == RESPONSE_ITEM && resultCode == RESULT_OK) {
             val message = data?.getStringExtra(MESSAGE)
-
             data?.getStringExtra(ITEM)?.let {
                 if (message != null) {
                     createSnackBar(rootLayout, message)
@@ -225,11 +270,6 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener,
             }
         }
         getDBSize()
-    }
-
-    private fun createSnackBar(view: View, message: String) {
-        val snackBar = Snackbar.make(view, message, Snackbar.LENGTH_LONG)
-        snackBar.setAction("Hide") { snackBar.dismiss() }.show()
     }
 
     override fun onItemClick(item: Item, position: Int) {
@@ -282,16 +322,14 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener,
         } else {
             item.title = "Dark Mode"
         }
-
         return super.onPrepareOptionsMenu(menu)
     }
 
     override fun onCellClickListener(item: Item, button: Button) {
-        button.setBackgroundResource(R.drawable.ic_baseline_favorite_border_24)
         itemViewModel.checkFavorite(item.name)
             .observeOnce(this, { items ->
                 items?.let {
-                    if (it.toInt() == 0) {
+                    if (it == 0) {
                         button.setBackgroundResource(R.drawable.ic_baseline_favorite_24)
                         val item = Item(item.name, item.description, item.picture, item.date, 1)
                         itemViewModel.insertReplace(item)
@@ -314,4 +352,8 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener,
         })
     }
 
+    private fun createSnackBar(view: View, message: String) {
+        val snackBar = Snackbar.make(view, message, Snackbar.LENGTH_LONG)
+        snackBar.setAction("Hide") { snackBar.dismiss() }.show()
+    }
 }

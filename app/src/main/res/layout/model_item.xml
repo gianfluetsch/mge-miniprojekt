@@ -43,7 +43,7 @@
             android:layout_alignLeft="@id/text_title"
             android:text="27.10.2020"
             android:textStyle="italic"
-            android:textColor="@color/black"/>
+            android:textColor="?attr/textColorDate"/>
 
         <Button
             android:id="@+id/button_favorite"

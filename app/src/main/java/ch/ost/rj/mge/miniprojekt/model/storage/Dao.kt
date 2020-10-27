@@ -22,7 +22,7 @@ interface Dao {
     fun getDateDesc(): LiveData<List<Item>>
 
     @Query("SELECT * from item_table ORDER BY favorite DESC")
-    fun getFavorites(): LiveData<List<Item>>
+    fun sortFavorites(): LiveData<List<Item>>
 
     @Query("SELECT COUNT(name) from item_table")
     fun isDBEmpty(): LiveData<Int>
@@ -32,6 +32,9 @@ interface Dao {
 
     @Query("SELECT favorite FROM item_table WHERE name = :itemName")
     fun checkFavorite(itemName: String): LiveData<Int>
+
+    @Query("SELECT * FROM item_table WHERE favorite = 1")
+    fun getAllFavorites(): LiveData<List<Item>>
 
     // ignores a new word if it's exactly the same as one already in the list
     @Insert(onConflict = OnConflictStrategy.IGNORE)

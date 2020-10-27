@@ -10,7 +10,7 @@
     <color name="transparent">#00FF0000</color>
     <color name="black">#000000</color>
     <color name="widget">#704CAF50</color>
-
+    <color name="white">#FFFFFFFF</color>
     <color name="ic_settings_color">#FFFFFFFF</color>
     <color name="ic_attachment_color">#FFFFFFFF</color>
     <color name="background_color">#FF808080</color>

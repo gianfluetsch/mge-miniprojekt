@@ -19,6 +19,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
     val allItemsDesc: LiveData<List<Item>>
     val dateItemsAsc: LiveData<List<Item>>
     val dateItemDesc: LiveData<List<Item>>
+    val sortFavorites: LiveData<List<Item>>
     val allFavorites: LiveData<List<Item>>
 
     init {
@@ -27,6 +28,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
         allItemsDesc = repository.allItemsDesc
         dateItemsAsc = repository.dateItemsAsc
         dateItemDesc = repository.dateItemsDesc
+        sortFavorites = repository.sortFavorites
         allFavorites = repository.allFavorites
         checkDB = repository.sumItems
     }

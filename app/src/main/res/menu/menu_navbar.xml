@@ -1,0 +1,20 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="ch.ost.rj.mge.miniprojekt.activities.Overview">
+
+    <item
+        android:id="@+id/action_all"
+        android:orderInCategory="100"
+        android:title="All Items"
+        android:icon="@drawable/ic_baseline_format_list_bulleted_24"
+        app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/action_favorites"
+        android:orderInCategory="101"
+        android:title="Favourites"
+        android:icon="@drawable/ic_baseline_favorite_border_24"
+        app:showAsAction="never"/>
+
+</menu>
