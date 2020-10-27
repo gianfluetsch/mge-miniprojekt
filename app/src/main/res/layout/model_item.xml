@@ -33,8 +33,27 @@
             android:text="Line 1"
             android:textSize="18sp"
             android:layout_centerHorizontal="true"
-            android:layout_centerVertical="true"
             android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/date_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/text_title"
+            android:layout_alignLeft="@id/text_title"
+            android:text="27.10.2020"
+            android:textStyle="italic"
+            android:textColor="@color/black"/>
+
+        <Button
+            android:id="@+id/button_favorite"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginLeft="70dp"
+            android:layout_centerVertical="true"
+            android:background="@drawable/ic_baseline_favorite_border_24"
+            android:layout_toRightOf="@id/text_title" />
+
 
     </RelativeLayout>
 

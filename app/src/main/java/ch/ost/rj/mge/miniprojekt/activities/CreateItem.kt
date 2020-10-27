@@ -23,9 +23,6 @@ import androidx.lifecycle.ViewModelProvider
 import ch.ost.rj.mge.miniprojekt.R
 import ch.ost.rj.mge.miniprojekt.model.InventoryViewModel
 import ch.ost.rj.mge.miniprojekt.model.Item
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
 import java.io.OutputStream
 import java.util.*
 
@@ -40,12 +37,14 @@ class CreateItem : AppCompatActivity() {
     private lateinit var imageView: ImageView
     private lateinit var btnImage: Button
     private lateinit var btnDate: Button
+    private lateinit var btnFavorite: Button
     private lateinit var imageUri: String
     private lateinit var itemViewModel: InventoryViewModel
     private lateinit var itemTitle: String
     private lateinit var itemDescription: String
     private lateinit var itemPicture: String
     private lateinit var itemDate: String
+    private var itemFavorite: Int = 0
     private var modified = false
     private lateinit var titleOld: String
     private lateinit var textViewDate: TextView
@@ -68,23 +67,26 @@ class CreateItem : AppCompatActivity() {
         btnDate = findViewById(R.id.add_date)
         textViewDate = findViewById(R.id.textview_date)
         textViewToolbar = findViewById(R.id.tv_toolbar_custom)
+        btnFavorite = findViewById(R.id.button_favorite_item)
 
         checkModified()
 
         itemViewModel = ViewModelProvider(this).get(InventoryViewModel::class.java)
-
+        btnFavorite.setOnClickListener {
+            checkFavoriteNew()
+        }
     }
 
     private fun saveItem() {
         btnSaveItem.setOnClickListener {
             var message: String
-            val itemNew = Item(itemTitleInput, itemDescriptionInput, imageUri, date)
+            val itemNew = Item(itemTitleInput, itemDescriptionInput, imageUri, date, itemFavorite)
             if (modified) {
                 if (itemTitleInput == titleOld) {
                     itemViewModel.insertReplace(itemNew)
                     waitForObserver("modified")
                 } else {
-                    val itemOld = Item(titleOld, itemDescription, itemPicture, date)
+                    val itemOld = Item(titleOld, itemDescription, itemPicture, date, itemFavorite)
                     itemViewModel.deleteItem(itemOld)
                     itemViewModel.insert(itemNew)
                     waitForObserver("modified")
@@ -118,6 +120,10 @@ class CreateItem : AppCompatActivity() {
             itemPicture = intent.getStringExtra(Overview.PICTURE)!!
             imageUri = itemPicture
             itemDate = intent.getStringExtra(Overview.DATE)!!
+
+            itemFavorite = intent.getIntExtra(Overview.FAVORITE, 0)
+            checkFavoriteModified()
+
             date = itemDate
             textViewToolbar.text = "Modify $itemTitle"
             textViewToolbar.text = String.format("Modify ")
@@ -133,9 +139,26 @@ class CreateItem : AppCompatActivity() {
             imageUri = ""
             textViewDate.text = "$day.${month + 1}.$year"
         }
-
         validateInput()
+    }
 
+    private fun checkFavoriteModified() {
+        if (itemFavorite == 0) {
+            btnFavorite.setBackgroundResource(R.drawable.ic_baseline_favorite_border_24)
+        } else {
+            btnFavorite.setBackgroundResource(R.drawable.ic_baseline_favorite_24)
+        }
+    }
+
+    private fun checkFavoriteNew() {
+        if (itemFavorite == 0) {
+            itemFavorite = 1
+            btnFavorite.setBackgroundResource(R.drawable.ic_baseline_favorite_24)
+        } else {
+            itemFavorite = 0
+            btnFavorite.setBackgroundResource(R.drawable.ic_baseline_favorite_border_24)
+        }
+        btnSaveItem.isEnabled = true
     }
 
     private fun waitForObserver(message: String) {
@@ -178,6 +201,7 @@ class CreateItem : AppCompatActivity() {
                     btnSaveItem.isEnabled = !itemDescriptionInput.isBlank()
                 }
             }
+
             override fun afterTextChanged(s: Editable?) {}
         })
 
@@ -186,7 +210,6 @@ class CreateItem : AppCompatActivity() {
         }
 
         btnDate.setOnClickListener {
-
 
             val datePickerDialog = DatePickerDialog(
                 this,
@@ -261,7 +284,7 @@ class CreateItem : AppCompatActivity() {
     private fun saveImageToExternalStorage(bitmap: Bitmap): Uri {
         val fileName = "${UUID.randomUUID()}.jpg"
         var fos: OutputStream? = null
-        var imageUriProv : Uri? = null
+        var imageUriProv: Uri? = null
 
         contentResolver?.also { resolver ->
             val contentValues = ContentValues().apply {

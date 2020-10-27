@@ -18,8 +18,9 @@
     <string-array name="filter_options">
         <item>Name Asc</item>
         <item>Name Desc</item>
-        <item>Date Asc</item>
-        <item>Date Desc</item>
+        <item>Favorites</item>
+        <item>Newest</item>
+        <item>Oldest</item>
     </string-array>
     <string name="select_date">Select Date</string>
     <string name="appwidget_text">Add Item</string>

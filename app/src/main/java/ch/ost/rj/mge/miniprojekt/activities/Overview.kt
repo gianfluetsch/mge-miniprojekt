@@ -12,6 +12,9 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import ch.ost.rj.mge.miniprojekt.R
@@ -22,7 +25,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_overview.*
 
-class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
+class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener,
+    RecyclerAdapter.CellClickListener {
 
     companion object {
         const val DESCRIPTION = "description"
@@ -34,6 +38,7 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
         const val GALLERY_REQUEST = 7
         const val CAMERA_REQUEST = 8
         const val MODIFY = "modify"
+        const val FAVORITE = "favorite"
         var darkModeCurrent = false
         var filterMode = 0
         var themeModePref = false
@@ -45,13 +50,14 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
         private var PRIVATE_MODE = 0
     }
 
-    private val recyclerAdapter = RecyclerAdapter(this)
+    private val recyclerAdapter = RecyclerAdapter(this, this)
     private lateinit var emptyView: TextView
     private lateinit var emptyImageView: ImageView
     private lateinit var btnAddItem: FloatingActionButton
     private lateinit var itemViewModel: InventoryViewModel
     private lateinit var item: Item
     private lateinit var btnFilterItems: Button
+    private lateinit var btnFavorite: Button
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -88,6 +94,7 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
                     1 -> changeFilter(1)
                     2 -> changeFilter(2)
                     3 -> changeFilter(3)
+                    4 -> changeFilter(4)
                 }
             }
         val dialog = builder.create()
@@ -106,7 +113,7 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
 
     private fun getFilterMode() {
         val preference: SharedPreferences = getSharedPreferences(filePath, PRIVATE_MODE)
-        filterModePref  = preference.getInt(FILTER, 0)
+        filterModePref = preference.getInt(FILTER, 0)
 
         if (filterModePref != filterMode) {
             changeFilter(filterModePref)
@@ -131,13 +138,19 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
             }
             2 -> {
                 filterMode = 2
-                itemViewModel.dateItemsAsc.observe(this, { items ->
+                itemViewModel.allFavorites.observe(this, { items ->
                     items?.let { recyclerAdapter.setItems(it) }
                 })
             }
             3 -> {
                 filterMode = 3
                 itemViewModel.dateItemDesc.observe(this, { items ->
+                    items?.let { recyclerAdapter.setItems(it) }
+                })
+            }
+            4 -> {
+                filterMode = 4
+                itemViewModel.dateItemsAsc.observe(this, { items ->
                     items?.let { recyclerAdapter.setItems(it) }
                 })
             }
@@ -230,10 +243,12 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
         val itemDescription = item.description
         val picture = item.picture
         val date = item.date
+        val favorite = item.favorite
         intent.putExtra(ITEM, itemTitle)
         intent.putExtra(DESCRIPTION, itemDescription)
         intent.putExtra(PICTURE, picture)
         intent.putExtra(DATE, date)
+        intent.putExtra(FAVORITE, favorite)
         startActivityForResult(intent, RESPONSE_ITEM)
     }
 
@@ -270,4 +285,33 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
 
         return super.onPrepareOptionsMenu(menu)
     }
+
+    override fun onCellClickListener(item: Item, button: Button) {
+        button.setBackgroundResource(R.drawable.ic_baseline_favorite_border_24)
+        itemViewModel.checkFavorite(item.name)
+            .observeOnce(this, { items ->
+                items?.let {
+                    if (it.toInt() == 0) {
+                        button.setBackgroundResource(R.drawable.ic_baseline_favorite_24)
+                        val item = Item(item.name, item.description, item.picture, item.date, 1)
+                        itemViewModel.insertReplace(item)
+                    } else {
+                        button.setBackgroundResource(R.drawable.ic_baseline_favorite_border_24)
+                        val item = Item(item.name, item.description, item.picture, item.date, 0)
+                        itemViewModel.insertReplace(item)
+                    }
+                }
+            })
+    }
+
+
+    private fun <T> LiveData<T>.observeOnce(lifecycleOwner: LifecycleOwner, observer: Observer<T>) {
+        observe(lifecycleOwner, object : Observer<T> {
+            override fun onChanged(t: T?) {
+                observer.onChanged(t)
+                removeObserver(this)
+            }
+        })
+    }
+
 }

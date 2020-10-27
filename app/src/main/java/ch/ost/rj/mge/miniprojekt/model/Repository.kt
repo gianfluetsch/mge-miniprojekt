@@ -8,6 +8,7 @@ class Repository (private val itemDao: Dao){
     val allItemsDesc: LiveData<List<Item>> = itemDao.getItemsDesc()
     val dateItemsAsc: LiveData<List<Item>> = itemDao.getDateAsc()
     val dateItemsDesc: LiveData<List<Item>> = itemDao.getDateDesc()
+    val allFavorites: LiveData<List<Item>> = itemDao.getFavorites()
     val sumItems: LiveData<Int> = itemDao.isDBEmpty()
 
     suspend fun insert(item: Item) {

@@ -19,6 +19,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
     val allItemsDesc: LiveData<List<Item>>
     val dateItemsAsc: LiveData<List<Item>>
     val dateItemDesc: LiveData<List<Item>>
+    val allFavorites: LiveData<List<Item>>
 
     init {
         repository = Repository(itemsDao)
@@ -26,6 +27,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
         allItemsDesc = repository.allItemsDesc
         dateItemsAsc = repository.dateItemsAsc
         dateItemDesc = repository.dateItemsDesc
+        allFavorites = repository.allFavorites
         checkDB = repository.sumItems
     }
 
@@ -43,5 +45,9 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun checkItemExist(itemName: String) : LiveData<Int> {
         return itemsDao.checkItemExists(itemName)
+    }
+
+    fun checkFavorite(itemName: String): LiveData<Int> {
+        return itemsDao.checkFavorite(itemName)
     }
 }
