@@ -68,7 +68,6 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener,
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_overview)
         setSupportActionBar(findViewById(R.id.toolbar))
-
         navigationView = findViewById(R.id.nav_view)
         emptyView = findViewById(R.id.empty_view)
         emptyImageView = findViewById(R.id.empty_imageView)
@@ -91,6 +90,7 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener,
         getNavViewMode()
 
         navigationView.setOnNavigationItemSelectedListener { item ->
+            itemViewModel.allFavorites.removeObservers(this)
             setNavView(item.itemId)
             true
         }
@@ -171,6 +171,7 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener,
     }
 
     private fun changeFilter(filter: Int) {
+        itemViewModel.allFavorites.removeObservers(this)
         when (filter) {
             0 -> {
                 filterMode = 0
@@ -340,6 +341,7 @@ class Overview : AppCompatActivity(), RecyclerAdapter.OnItemClickListener,
                     }
                 }
             })
+
     }
 
 

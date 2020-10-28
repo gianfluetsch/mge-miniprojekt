@@ -19,7 +19,6 @@ class ItemOverview : AppCompatActivity() {
     private lateinit var itemDescription: TextView
     private lateinit var itemPicture: ImageView
     private lateinit var itemDate: TextView
-    private var itemFavorite = 0
     private lateinit var buttonDelete: Button
     private lateinit var buttonFavorite: Button
     private lateinit var itemViewModel: InventoryViewModel

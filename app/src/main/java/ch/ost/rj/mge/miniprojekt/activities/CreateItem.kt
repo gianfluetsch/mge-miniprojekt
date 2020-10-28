@@ -154,7 +154,9 @@ class CreateItem : AppCompatActivity() {
             itemFavorite = 0
             btnFavorite.setBackgroundResource(R.drawable.ic_baseline_favorite_border_24)
         }
-        btnSaveItem.isEnabled = true
+        if (modified) {
+            btnSaveItem.isEnabled = true
+        }
     }
 
     private fun waitForObserver(message: String) {
@@ -296,5 +298,4 @@ class CreateItem : AppCompatActivity() {
         imageUri = imageUriProv.toString()
         return Uri.parse(imageUri)
     }
-
 }

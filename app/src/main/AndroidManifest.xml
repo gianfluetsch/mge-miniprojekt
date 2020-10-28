@@ -25,6 +25,7 @@
         <activity
             android:name=".activities.Overview"
             android:launchMode="singleTop"
+            android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -35,10 +36,12 @@
         <activity
             android:name=".activities.CreateItem"
             android:theme="@style/AppTheme.NoActionBar"
+            android:screenOrientation="portrait"
             android:parentActivityName=".activities.Overview" />
         <activity
             android:name=".activities.ItemOverview"
             android:theme="@style/AppTheme.NoActionBar"
+            android:screenOrientation="portrait"
             android:parentActivityName=".activities.Overview" />
     </application>
 
